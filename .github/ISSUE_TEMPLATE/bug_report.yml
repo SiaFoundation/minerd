@@ -37,7 +37,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: What version of walletd are you running? If you are running from source, please provide the commit hash.
+      description: What version of minerd are you running? If you are running from source, please provide the commit hash.
       placeholder: v0.8.0
     validations:
       required: true

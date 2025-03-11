@@ -5,12 +5,12 @@ package build
 
 import "time"
 
-// Commit returns the commit hash of walletd
+// Commit returns the commit hash of minerd
 func Commit() string {
 	return commit
 }
 
-// Version returns the version of walletd
+// Version returns the version of minerd
 func Version() string {
 	return version
 }

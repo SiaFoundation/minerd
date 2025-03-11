@@ -23,6 +23,6 @@ jobs:
       windows-build-args: -tags='timetzdata netgo' -trimpath -a -ldflags '-s -w -linkmode external -extldflags "-static"'
       macos-build-args: -tags='timetzdata netgo' -trimpath -a -ldflags '-s -w'
       cgo-enabled: 1
-      project: walletd
-      project-desc: "walletd: The new Sia wallet"
+      project: minerd
+      project-desc: "minerd: The new Sia daemon for miners"
       version-tag: ${{ github.ref_name }}

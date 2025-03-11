@@ -1,5 +1,5 @@
 name: Feature Request
-description: Request a new feature be added to walletd.
+description: Request a new feature be added to minerd.
 labels: ["feature"]
 body:
   - type: markdown
@@ -22,7 +22,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: What version of walletd are you running?
+      description: What version of minerd are you running?
       placeholder: v0.8.0
     validations:
       required: false

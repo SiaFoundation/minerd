@@ -43,7 +43,7 @@ func WithKeyManager(ks SigningKeyManager) ServerOption {
 }
 
 // WithPublicEndpoints sets whether the server should disable authentication
-// on endpoints that are safe for use when running walletd as a service.
+// on endpoints that are safe for use when running minerd as a service.
 func WithPublicEndpoints(public bool) ServerOption {
 	return func(s *server) {
 		s.publicEndpoints = public
@@ -212,7 +212,7 @@ func (s *server) miningSubmitBlockTemplateHandler(jc jape.Context) {
 	jc.EmptyResonse()
 }
 
-// NewServer returns an HTTP handler that serves the walletd API.
+// NewServer returns an HTTP handler that serves the minerd API.
 func NewServer(cm ChainManager, s Syncer, opts ...ServerOption) http.Handler {
 	srv := server{
 		log:             zap.NewNop(),

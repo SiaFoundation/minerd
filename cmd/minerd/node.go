@@ -37,21 +37,21 @@ func tryConfigPaths() []string {
 	}
 
 	paths := []string{
-		"walletd.yml",
+		"minerd.yml",
 	}
 	if str := os.Getenv(dataDirEnvVar); str != "" {
-		paths = append(paths, filepath.Join(str, "walletd.yml"))
+		paths = append(paths, filepath.Join(str, "minerd.yml"))
 	}
 
 	switch runtime.GOOS {
 	case "windows":
-		paths = append(paths, filepath.Join(os.Getenv("APPDATA"), "walletd", "walletd.yml"))
+		paths = append(paths, filepath.Join(os.Getenv("APPDATA"), "minerd", "minerd.yml"))
 	case "darwin":
-		paths = append(paths, filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "walletd", "walletd.yml"))
+		paths = append(paths, filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "minerd", "minerd.yml"))
 	case "linux", "freebsd", "openbsd":
 		paths = append(paths,
-			filepath.Join(string(filepath.Separator), "etc", "walletd", "walletd.yml"),
-			filepath.Join(string(filepath.Separator), "var", "lib", "walletd", "walletd.yml"), // old default for the Linux service
+			filepath.Join(string(filepath.Separator), "etc", "minerd", "minerd.yml"),
+			filepath.Join(string(filepath.Separator), "var", "lib", "minerd", "minerd.yml"), // old default for the Linux service
 		)
 	}
 	return paths
@@ -64,20 +64,20 @@ func defaultDataDirectory(fp string) string {
 	}
 
 	// check for databases in the current directory
-	if _, err := os.Stat("walletd.db"); err == nil {
+	if _, err := os.Stat("minerd.db"); err == nil {
 		return "."
-	} else if _, err := os.Stat("walletd.sqlite3"); err == nil {
+	} else if _, err := os.Stat("minerd.sqlite3"); err == nil {
 		return "."
 	}
 
 	// default to the operating system's application directory
 	switch runtime.GOOS {
 	case "windows":
-		return filepath.Join(os.Getenv("APPDATA"), "walletd")
+		return filepath.Join(os.Getenv("APPDATA"), "minerd")
 	case "darwin":
-		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "walletd")
+		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "minerd")
 	case "linux", "freebsd", "openbsd":
-		return filepath.Join(string(filepath.Separator), "var", "lib", "walletd")
+		return filepath.Join(string(filepath.Separator), "var", "lib", "minerd")
 	default:
 		return "."
 	}
@@ -90,7 +90,7 @@ func setupUPNP(ctx context.Context, port uint16, log *zap.Logger) (string, error
 	if err != nil {
 		return "", fmt.Errorf("couldn't discover UPnP router: %w", err)
 	} else if !d.IsForwarded(port, "TCP") {
-		if err := d.Forward(uint16(port), "TCP", "walletd"); err != nil {
+		if err := d.Forward(uint16(port), "TCP", "minerd"); err != nil {
 			log.Debug("couldn't forward port", zap.Error(err))
 		} else {
 			log.Debug("upnp: forwarded p2p port", zap.Uint16("port", port))
@@ -163,7 +163,7 @@ func runNode(ctx context.Context, cfg config.Config, log *zap.Logger, enableDebu
 		syncerAddr = net.JoinHostPort("127.0.0.1", port)
 	}
 
-	store, err := sqlite.OpenDatabase(filepath.Join(cfg.Directory, "walletd.sqlite3"), log.Named("sqlite3"))
+	store, err := sqlite.OpenDatabase(filepath.Join(cfg.Directory, "minerd.sqlite3"), log.Named("sqlite3"))
 	if err != nil {
 		return fmt.Errorf("failed to open wallet database: %w", err)
 	}

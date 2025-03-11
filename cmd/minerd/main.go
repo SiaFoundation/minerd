@@ -22,43 +22,43 @@ import (
 )
 
 const (
-	apiPasswordEnvVar    = "WALLETD_API_PASSWORD"
-	configFileEnvVar     = "WALLETD_CONFIG_FILE"
-	dataDirEnvVar        = "WALLETD_DATA_DIR"
-	logFileEnvVar        = "WALLETD_LOG_FILE_PATH"
-	keystoreSecretEnvVar = "WALLETD_KEYSTORE_SECRET"
+	apiPasswordEnvVar    = "MINERD_API_PASSWORD"
+	configFileEnvVar     = "MINERD_CONFIG_FILE"
+	dataDirEnvVar        = "MINERD_DATA_DIR"
+	logFileEnvVar        = "MINERD_LOG_FILE_PATH"
+	keystoreSecretEnvVar = "MINERD_KEYSTORE_SECRET"
 )
 
 const (
 	rootUsage = `Usage:
-    walletd [flags] [action]
+    minerd [flags] [action]
 
-Run 'walletd' with no arguments to start the blockchain node and API server.
+    Run 'minerd' with no arguments to start the blockchain node and API server.
 
 Actions:
-    version     print walletd version
+    version     print minerd version
     seed        generate a recovery phrase
     mine        run CPU miner`
 
 	versionUsage = `Usage:
-    walletd version
+    minerd version
 
-Prints the version of the walletd binary.
+    Prints the version of the minerd binary.
 `
 	seedUsage = `Usage:
-    walletd seed
+    minerd seed
 
 Generates a secure BIP-39 recovery phrase.
 `
 	mineUsage = `Usage:
-    walletd mine
+    minerd mine
 
 Runs a CPU miner. Not intended for production use.
 `
 )
 
 var cfg = config.Config{
-	Name:          "walletd",
+	Name:          "minerd",
 	Directory:     os.Getenv(dataDirEnvVar),
 	AutoOpenWebUI: true,
 	HTTP: config.HTTP{
@@ -103,7 +103,7 @@ func mustSetAPIPassword() {
 
 	// retry until a valid API password is entered
 	for {
-		fmt.Println("Please choose a password to unlock walletd.")
+		fmt.Println("Please choose a password to unlock minerd.")
 		fmt.Println("This password will be required to access the admin UI in your web browser.")
 		fmt.Println("(The password must be at least 4 characters.)")
 		cfg.HTTP.Password = readPasswordInput("Enter password")
@@ -126,7 +126,7 @@ func checkFatalError(context string, err error) {
 }
 
 // tryLoadConfig tries to load the config file. It will try multiple locations
-// based on GOOS starting with PWD/walletd.yml. If the file does not exist, it will
+// based on GOOS starting with PWD/minerd.yml. If the file does not exist, it will
 // try the next location. If an error occurs while loading the file, it will
 // print the error and exit. If the config is successfully loaded, the path to
 // the config file is returned.
@@ -215,7 +215,7 @@ func main() {
 	rootCmd.BoolVar(&enableDebug, "debug", false, "enable debug mode with additional profiling and mining endpoints")
 	rootCmd.StringVar(&cfg.Directory, "dir", cfg.Directory, "directory to store node state in")
 	rootCmd.StringVar(&cfg.HTTP.Address, "http", cfg.HTTP.Address, "address to serve API on")
-	rootCmd.BoolVar(&cfg.HTTP.PublicEndpoints, "http.public", cfg.HTTP.PublicEndpoints, "disables auth on endpoints that should be publicly accessible when running walletd as a service")
+	rootCmd.BoolVar(&cfg.HTTP.PublicEndpoints, "http.public", cfg.HTTP.PublicEndpoints, "disables auth on endpoints that should be publicly accessible when running minerd as a service")
 	rootCmd.BoolVar(&cfg.KeyStore.Enabled, "keystore", cfg.KeyStore.Enabled, "enables the keystore")
 
 	rootCmd.StringVar(&cfg.Syncer.Address, "addr", cfg.Syncer.Address, "p2p address to listen on")
@@ -228,7 +228,7 @@ func main() {
 
 	versionCmd := flagg.New("version", versionUsage)
 	seedCmd := flagg.New("seed", seedUsage)
-	configCmd := flagg.New("config", "interactively configure walletd")
+	configCmd := flagg.New("config", "interactively configure minerd")
 
 	mineCmd := flagg.New("mine", mineUsage)
 	mineCmd.IntVar(&minerBlocks, "n", -1, "mine this many blocks. If negative, mine indefinitely")
@@ -294,7 +294,7 @@ func main() {
 
 			// normalize log path
 			if cfg.Log.File.Path == "" {
-				cfg.Log.File.Path = filepath.Join(cfg.Directory, "walletd.log")
+				cfg.Log.File.Path = filepath.Join(cfg.Directory, "minerd.log")
 			}
 
 			// configure file logging
@@ -332,7 +332,7 @@ func main() {
 			cmd.Usage()
 			return
 		}
-		fmt.Println("walletd", build.Version())
+		fmt.Println("minerd", build.Version())
 		fmt.Println("Commit:", build.Commit())
 		fmt.Println("Build Date:", build.Time())
 	case seedCmd:

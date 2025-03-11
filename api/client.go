@@ -15,7 +15,7 @@ import (
 	"go.sia.tech/walletd/v2/wallet"
 )
 
-// A Client provides methods for interacting with a walletd API server.
+// A Client provides methods for interacting with a minerd API server.
 type Client struct {
 	c jape.Client
 

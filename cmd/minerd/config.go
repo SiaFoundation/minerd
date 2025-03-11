@@ -94,7 +94,7 @@ func stdoutError(msg string) {
 func setAPIPassword() {
 	// retry until a valid API password is entered
 	for {
-		fmt.Println("Please choose a password to unlock walletd.")
+		fmt.Println("Please choose a password to unlock minerd.")
 		fmt.Println("This password will be required to access the admin UI in your web browser.")
 		fmt.Println("(The password must be at least 4 characters.)")
 		cfg.HTTP.Password = readPasswordInput("Enter password")
@@ -115,15 +115,15 @@ func setDataDirectory() {
 	dir, err := filepath.Abs(cfg.Directory)
 	checkFatalError("failed to get absolute path of data directory", err)
 
-	fmt.Println("The data directory is where walletd will store its metadata and consensus data.")
+	fmt.Println("The data directory is where minerd will store its metadata and consensus data.")
 	fmt.Println("This directory should be on a fast, reliable storage device, preferably an SSD.")
 	fmt.Println("")
 
-	_, existsErr := os.Stat(filepath.Join(cfg.Directory, "walletd.sqlite3"))
+	_, existsErr := os.Stat(filepath.Join(cfg.Directory, "minerd.sqlite3"))
 	dataExists := existsErr == nil
 	if dataExists {
 		fmt.Println(wrapANSI("\033[33m", "There is existing data in the data directory.", "\033[0m"))
-		fmt.Println(wrapANSI("\033[33m", "If you change your data directory, you will need to manually move consensus, gateway, tpool, and walletd.sqlite3 to the new directory.", "\033[0m"))
+		fmt.Println(wrapANSI("\033[33m", "If you change your data directory, you will need to manually move consensus, gateway, tpool, and minerd.sqlite3 to the new directory.", "\033[0m"))
 	}
 
 	if !promptYesNo("Would you like to change the data directory? (Current: " + dir + ")") {
@@ -165,7 +165,7 @@ func setAdvancedConfig() {
 	}
 
 	fmt.Println("")
-	fmt.Println("Advanced settings are used to configure walletd's behavior.")
+	fmt.Println("Advanced settings are used to configure minerd's behavior.")
 	fmt.Println("You can leave these settings blank to use the defaults.")
 	fmt.Println("")
 
@@ -187,7 +187,7 @@ func setAdvancedConfig() {
 	fmt.Println(`"full" mode stores all blockchain events. This mode is useful for exchanges and shared wallet clients.`)
 	fmt.Println("This mode requires significantly more disk space, but does not require rescanning when adding new addresses.")
 	fmt.Println("")
-	fmt.Println("This cannot be changed later without resetting walletd.")
+	fmt.Println("This cannot be changed later without resetting minerd.")
 	fmt.Printf("Currently %q\n", cfg.Index.Mode)
 	mode := readInput(`Enter index mode ("personal" or "full")`)
 	switch {
@@ -200,10 +200,10 @@ func setAdvancedConfig() {
 	}
 
 	fmt.Println("")
-	fmt.Println("The network is the blockchain network that walletd will connect to.")
+	fmt.Println("The network is the blockchain network that minerd will connect to.")
 	fmt.Println("Mainnet is the default network.")
 	fmt.Println("Zen is a production-like testnet.")
-	fmt.Println("This cannot be changed later without resetting walletd.")
+	fmt.Println("This cannot be changed later without resetting minerd.")
 	fmt.Printf("Currently %q\n", cfg.Consensus.Network)
 	cfg.Consensus.Network = readInput(`Enter network ("mainnet" or "zen")`)
 }
@@ -215,19 +215,19 @@ func configPath() string {
 
 	switch runtime.GOOS {
 	case "windows":
-		return filepath.Join(os.Getenv("APPDATA"), "walletd", "walletd.yml")
+		return filepath.Join(os.Getenv("APPDATA"), "minerd", "minerd.yml")
 	case "darwin":
-		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "walletd", "walletd.yml")
+		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "minerd", "minerd.yml")
 	case "linux", "freebsd", "openbsd":
-		return filepath.Join(string(filepath.Separator), "etc", "walletd", "walletd.yml")
+		return filepath.Join(string(filepath.Separator), "etc", "minerd", "minerd.yml")
 	default:
-		return "walletd.yml"
+		return "minerd.yml"
 	}
 }
 
 func buildConfig(fp string) {
-	fmt.Println("walletd Configuration Wizard")
-	fmt.Println("This wizard will help you configure walletd for the first time.")
+	fmt.Println("Minerd Configuration Wizard")
+	fmt.Println("This wizard will help you configure minerd for the first time.")
 	fmt.Println("You can always change these settings with the config command or by editing the config file.")
 
 	// write the config file
