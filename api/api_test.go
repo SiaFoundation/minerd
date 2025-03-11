@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"net"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,6 +13,8 @@ import (
 	"go.sia.tech/core/types"
 	"go.sia.tech/minerd/api"
 	"go.sia.tech/minerd/internal/testutil"
+	walletdAPI "go.sia.tech/walletd/v2/api"
+	"go.sia.tech/walletd/v2/wallet"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 )
@@ -25,8 +28,25 @@ func startMinerServer(tb testing.TB, cn *testutil.ConsensusNode, log *zap.Logger
 	}
 	tb.Cleanup(func() { l.Close() })
 
+	wm, err := wallet.NewManager(cn.Chain, cn.Store)
+	if err != nil {
+		tb.Fatal(err)
+	}
+	tb.Cleanup(func() { wm.Close() })
+
+	minerAPI := api.NewServer(cn.Chain, cn.Syncer, api.WithLogger(log))
+	wAPI := walletdAPI.NewServer(cn.Chain, cn.Syncer, wm)
 	server := &http.Server{
-		Handler:      api.NewServer(cn.Chain, cn.Syncer, api.WithLogger(log)),
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// serve mining API
+			if strings.HasPrefix(r.URL.Path, "/mining") {
+				r.URL.Path = strings.TrimPrefix(r.URL.Path, "/mining")
+				minerAPI.ServeHTTP(w, r)
+				return
+			}
+			// serve walletd API
+			wAPI.ServeHTTP(w, r)
+		}),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 	}
