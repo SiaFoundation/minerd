@@ -1,0 +1,18 @@
+name: Update UI and open PR
+
+on:
+  repository_dispatch:
+    types: [update-ui]
+  # Enable manual trigger
+  workflow_dispatch:
+
+jobs:
+  update-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update UI and open PR
+        uses: SiaFoundation/workflows/.github/actions/ui-update@master
+        with:
+          moduleName: 'walletd'
+          goVersion: '1.21'
+          token: ${{ secrets.GITHUB_TOKEN }} 

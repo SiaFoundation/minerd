@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"net/http"
-	"sync"
 	"time"
 
 	"go.sia.tech/jape"
@@ -155,10 +154,6 @@ type server struct {
 	cm  ChainManager
 	s   Syncer
 	km  SigningKeyManager
-
-	scanMu         sync.Mutex // for resubscribe
-	scanInProgress bool
-	scanInfo       RescanResponse
 }
 
 func (s *server) miningGetBlockTemplateHandler(jc jape.Context) {
