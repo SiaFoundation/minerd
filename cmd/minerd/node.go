@@ -19,7 +19,8 @@ import (
 	"go.sia.tech/coreutils"
 	"go.sia.tech/coreutils/chain"
 	"go.sia.tech/coreutils/syncer"
-	"go.sia.tech/walletd/v2/api"
+	"go.sia.tech/minerd/api"
+	wAPI "go.sia.tech/walletd/v2/api"
 	"go.sia.tech/walletd/v2/build"
 	"go.sia.tech/walletd/v2/config"
 	"go.sia.tech/walletd/v2/keys"
@@ -202,13 +203,13 @@ func runNode(ctx context.Context, cfg config.Config, log *zap.Logger, enableDebu
 	}
 	defer wm.Close()
 
-	apiOpts := []api.ServerOption{
-		api.WithLogger(log.Named("api")),
-		api.WithPublicEndpoints(cfg.HTTP.PublicEndpoints),
-		api.WithBasicAuth(cfg.HTTP.Password),
+	apiOpts := []wAPI.ServerOption{
+		wAPI.WithLogger(log.Named("api")),
+		wAPI.WithPublicEndpoints(cfg.HTTP.PublicEndpoints),
+		wAPI.WithBasicAuth(cfg.HTTP.Password),
 	}
 	if enableDebug {
-		apiOpts = append(apiOpts, api.WithDebug())
+		apiOpts = append(apiOpts, wAPI.WithDebug())
 	}
 	if cfg.KeyStore.Enabled {
 		km, err := keys.NewManager(store, cfg.KeyStore.Secret)
@@ -217,15 +218,23 @@ func runNode(ctx context.Context, cfg config.Config, log *zap.Logger, enableDebu
 		}
 		defer km.Close()
 
-		apiOpts = append(apiOpts, api.WithKeyManager(km))
+		apiOpts = append(apiOpts, wAPI.WithKeyManager(km))
 	}
-	api := api.NewServer(cm, s, wm, apiOpts...)
+	walletdAPI := wAPI.NewServer(cm, s, wm, apiOpts...)
+	minerAPI := api.NewServer(cm, s)
 	web := walletd.Handler()
 	server := &http.Server{
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// serve mining API
+			if strings.HasPrefix(r.URL.Path, "/api/mining") {
+				r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api/mining")
+				minerAPI.ServeHTTP(w, r)
+				return
+			}
+			// serve walletd API
 			if strings.HasPrefix(r.URL.Path, "/api") {
 				r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api")
-				api.ServeHTTP(w, r)
+				walletdAPI.ServeHTTP(w, r)
 				return
 			}
 			web.ServeHTTP(w, r)
