@@ -15,7 +15,6 @@ import (
 	"go.sia.tech/core/types"
 	"go.sia.tech/coreutils/chain"
 	"go.sia.tech/coreutils/syncer"
-	"go.sia.tech/walletd/v2/wallet"
 )
 
 // A ServerOption sets an optional parameter for the server.
@@ -25,28 +24,6 @@ type ServerOption func(*server)
 func WithLogger(log *zap.Logger) ServerOption {
 	return func(s *server) {
 		s.log = log
-	}
-}
-
-// WithDebug enables debug endpoints.
-func WithDebug() ServerOption {
-	return func(s *server) {
-		s.debugEnabled = true
-	}
-}
-
-// WithKeyManager sets the key manager used by the server.
-func WithKeyManager(ks SigningKeyManager) ServerOption {
-	return func(s *server) {
-		s.km = ks
-	}
-}
-
-// WithPublicEndpoints sets whether the server should disable authentication
-// on endpoints that are safe for use when running minerd as a service.
-func WithPublicEndpoints(public bool) ServerOption {
-	return func(s *server) {
-		s.publicEndpoints = public
 	}
 }
 
@@ -87,61 +64,6 @@ type (
 		BroadcastV2TransactionSet(index types.ChainIndex, txns []types.V2Transaction)
 		BroadcastV2BlockOutline(bo gateway.V2BlockOutline)
 	}
-
-	// A WalletManager manages wallets, keyed by name.
-	WalletManager interface {
-		IndexMode() wallet.IndexMode
-		Tip() (types.ChainIndex, error)
-		Scan(_ context.Context, index types.ChainIndex) error
-
-		AddWallet(wallet.Wallet) (wallet.Wallet, error)
-		UpdateWallet(wallet.Wallet) (wallet.Wallet, error)
-		DeleteWallet(wallet.ID) error
-		Wallets() ([]wallet.Wallet, error)
-
-		AddAddress(id wallet.ID, addr wallet.Address) error
-		RemoveAddress(id wallet.ID, addr types.Address) error
-		Addresses(id wallet.ID) ([]wallet.Address, error)
-		WalletAddress(wallet.ID, types.Address) (wallet.Address, error)
-		WalletEvents(id wallet.ID, offset, limit int) ([]wallet.Event, error)
-		WalletUnconfirmedEvents(id wallet.ID) ([]wallet.Event, error)
-		SelectSiacoinElements(walletID wallet.ID, amount types.Currency, useUnconfirmed bool) ([]types.SiacoinElement, types.ChainIndex, types.Currency, error)
-		SelectSiafundElements(walletID wallet.ID, amount uint64) ([]types.SiafundElement, types.ChainIndex, uint64, error)
-		UnspentSiacoinOutputs(id wallet.ID, offset, limit int) ([]types.SiacoinElement, types.ChainIndex, error)
-		UnspentSiafundOutputs(id wallet.ID, offset, limit int) ([]types.SiafundElement, types.ChainIndex, error)
-		WalletBalance(id wallet.ID) (wallet.Balance, error)
-
-		AddressBalance(address types.Address) (wallet.Balance, error)
-		AddressEvents(address types.Address, offset, limit int) ([]wallet.Event, error)
-		AddressUnconfirmedEvents(address types.Address) ([]wallet.Event, error)
-		AddressSiacoinOutputs(address types.Address, offset, limit int) ([]types.SiacoinElement, types.ChainIndex, error)
-		AddressSiafundOutputs(address types.Address, offset, limit int) ([]types.SiafundElement, types.ChainIndex, error)
-
-		Events(eventIDs []types.Hash256) ([]wallet.Event, error)
-
-		SiacoinElement(types.SiacoinOutputID) (types.SiacoinElement, error)
-		SiafundElement(types.SiafundOutputID) (types.SiafundElement, error)
-		// SiacoinElementSpentEvent returns the event of a spent siacoin element.
-		// If the element is not spent, the return value will be (Event{}, false, nil).
-		// If the element is not found, the error will be ErrNotFound. An element
-		// is only tracked for 144 blocks after it is spent.
-		SiacoinElementSpentEvent(types.SiacoinOutputID) (wallet.Event, bool, error)
-		// SiafundElementSpentEvent returns the event of a spent siafund element.
-		// If the element is not spent, the second return value will be (Event{}, false, nil).
-		// If the element is not found, the error will be ErrNotFound. An element
-		// is only tracked for 144 blocks after it is spent.
-		SiafundElementSpentEvent(types.SiafundOutputID) (wallet.Event, bool, error)
-
-		Reserve([]types.Hash256) error
-		Release([]types.Hash256)
-	}
-
-	// A SigningKeyManager manages ed25519 signing keys.
-	SigningKeyManager interface {
-		Add(types.PrivateKey) error
-		Delete(types.PublicKey) error
-		Sign(types.PublicKey, types.Hash256) (types.Signature, error)
-	}
 )
 
 type server struct {
@@ -153,7 +75,6 @@ type server struct {
 	log *zap.Logger
 	cm  ChainManager
 	s   Syncer
-	km  SigningKeyManager
 }
 
 func (s *server) miningGetBlockTemplateHandler(jc jape.Context) {

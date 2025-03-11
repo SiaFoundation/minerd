@@ -26,7 +26,7 @@ func startMinerServer(tb testing.TB, cn *testutil.ConsensusNode, log *zap.Logger
 	tb.Cleanup(func() { l.Close() })
 
 	server := &http.Server{
-		Handler:      api.NewServer(cn.Chain, cn.Syncer, api.WithDebug(), api.WithLogger(log)),
+		Handler:      api.NewServer(cn.Chain, cn.Syncer, api.WithLogger(log)),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 	}

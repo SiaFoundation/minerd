@@ -203,13 +203,17 @@ func runNode(ctx context.Context, cfg config.Config, log *zap.Logger, enableDebu
 	}
 	defer wm.Close()
 
-	apiOpts := []wAPI.ServerOption{
+	walletdAPIOpts := []wAPI.ServerOption{
 		wAPI.WithLogger(log.Named("api")),
 		wAPI.WithPublicEndpoints(cfg.HTTP.PublicEndpoints),
 		wAPI.WithBasicAuth(cfg.HTTP.Password),
 	}
+	minerAPIOpts := []api.ServerOption{
+		api.WithLogger(log.Named("api")),
+		api.WithBasicAuth(cfg.HTTP.Password),
+	}
 	if enableDebug {
-		apiOpts = append(apiOpts, wAPI.WithDebug())
+		walletdAPIOpts = append(walletdAPIOpts, wAPI.WithDebug())
 	}
 	if cfg.KeyStore.Enabled {
 		km, err := keys.NewManager(store, cfg.KeyStore.Secret)
@@ -218,10 +222,10 @@ func runNode(ctx context.Context, cfg config.Config, log *zap.Logger, enableDebu
 		}
 		defer km.Close()
 
-		apiOpts = append(apiOpts, wAPI.WithKeyManager(km))
+		walletdAPIOpts = append(walletdAPIOpts, wAPI.WithKeyManager(km))
 	}
-	walletdAPI := wAPI.NewServer(cm, s, wm, apiOpts...)
-	minerAPI := api.NewServer(cm, s)
+	walletdAPI := wAPI.NewServer(cm, s, wm, walletdAPIOpts...)
+	minerAPI := api.NewServer(cm, s, minerAPIOpts...)
 	web := walletd.Handler()
 	server := &http.Server{
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
