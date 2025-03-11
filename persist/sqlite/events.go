@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"go.sia.tech/core/types"
-	"go.sia.tech/walletd/wallet"
+	"go.sia.tech/walletd/v2/wallet"
 )
 
 // Events returns the events with the given event IDs. If an event is not found,
@@ -22,14 +22,14 @@ func (s *Store) Events(eventIDs []types.Hash256) (events []wallet.Event, err err
 		// sqlite doesn't have easy support for IN clauses, use a statement since
 		// the number of event IDs is likely to be small instead of dynamically
 		// building the query
-		const query = `SELECT 
-	ev.id, 
-	ev.event_id, 
-	ev.maturity_height, 
-	ev.date_created, 
-	ci.height, 
-	ci.block_id, 
-	ev.event_type, 
+		const query = `SELECT
+	ev.id,
+	ev.event_id,
+	ev.maturity_height,
+	ev.date_created,
+	ci.height,
+	ci.block_id,
+	ev.event_type,
 	ev.event_data
 FROM events ev
 INNER JOIN event_addresses ea ON (ev.id = ea.event_id)

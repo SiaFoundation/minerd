@@ -11,7 +11,7 @@ import (
 
 	"go.sia.tech/core/types"
 	"go.sia.tech/coreutils/chain"
-	"go.sia.tech/walletd/internal/threadgroup"
+	"go.sia.tech/coreutils/threadgroup"
 	"go.uber.org/zap"
 )
 
@@ -544,7 +544,7 @@ func (m *Manager) Scan(ctx context.Context, index types.ChainIndex) error {
 		return fmt.Errorf("scans are disabled in index mode %s", m.indexMode)
 	}
 
-	ctx, cancel, err := m.tg.AddWithContext(ctx)
+	ctx, cancel, err := m.tg.AddContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -654,7 +654,7 @@ func NewManager(cm ChainManager, store Store, opts ...Option) (*Manager, error) 
 	})
 
 	go func() {
-		ctx, cancel, err := m.tg.AddWithContext(context.Background())
+		ctx, cancel, err := m.tg.AddContext(context.Background())
 		if errors.Is(err, threadgroup.ErrClosed) {
 			return
 		} else if err != nil {
@@ -685,7 +685,7 @@ func NewManager(cm ChainManager, store Store, opts ...Option) (*Manager, error) 
 		defer unsubscribe()
 
 		log := m.log.Named("sync")
-		ctx, cancel, err := m.tg.AddWithContext(context.Background())
+		ctx, cancel, err := m.tg.AddContext(context.Background())
 		if err != nil {
 			log.Panic("failed to add to threadgroup", zap.Error(err))
 		}

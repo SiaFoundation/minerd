@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"go.sia.tech/core/types"
-	"go.sia.tech/walletd/internal/threadgroup"
+	"go.sia.tech/coreutils/threadgroup"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/chacha20poly1305"
 	"lukechampine.com/frand"
