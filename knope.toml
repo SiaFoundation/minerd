@@ -53,4 +53,4 @@ variables = { "$changelog" = "ChangelogEntry", "$version" = "Version" }
 
 [github]
 owner = "SiaFoundation"
-repo = "walletd"
+repo = "minerd"

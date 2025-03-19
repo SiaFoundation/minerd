@@ -19,12 +19,13 @@ import (
 	"go.sia.tech/coreutils"
 	"go.sia.tech/coreutils/chain"
 	"go.sia.tech/coreutils/syncer"
-	"go.sia.tech/walletd/api"
-	"go.sia.tech/walletd/build"
-	"go.sia.tech/walletd/config"
-	"go.sia.tech/walletd/keys"
-	"go.sia.tech/walletd/persist/sqlite"
-	"go.sia.tech/walletd/wallet"
+	"go.sia.tech/minerd/api"
+	wAPI "go.sia.tech/walletd/v2/api"
+	"go.sia.tech/walletd/v2/build"
+	"go.sia.tech/walletd/v2/config"
+	"go.sia.tech/walletd/v2/keys"
+	"go.sia.tech/walletd/v2/persist/sqlite"
+	"go.sia.tech/walletd/v2/wallet"
 	"go.sia.tech/web/walletd"
 	"go.uber.org/zap"
 	"lukechampine.com/upnp"
@@ -36,21 +37,21 @@ func tryConfigPaths() []string {
 	}
 
 	paths := []string{
-		"walletd.yml",
+		"minerd.yml",
 	}
 	if str := os.Getenv(dataDirEnvVar); str != "" {
-		paths = append(paths, filepath.Join(str, "walletd.yml"))
+		paths = append(paths, filepath.Join(str, "minerd.yml"))
 	}
 
 	switch runtime.GOOS {
 	case "windows":
-		paths = append(paths, filepath.Join(os.Getenv("APPDATA"), "walletd", "walletd.yml"))
+		paths = append(paths, filepath.Join(os.Getenv("APPDATA"), "minerd", "minerd.yml"))
 	case "darwin":
-		paths = append(paths, filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "walletd", "walletd.yml"))
+		paths = append(paths, filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "minerd", "minerd.yml"))
 	case "linux", "freebsd", "openbsd":
 		paths = append(paths,
-			filepath.Join(string(filepath.Separator), "etc", "walletd", "walletd.yml"),
-			filepath.Join(string(filepath.Separator), "var", "lib", "walletd", "walletd.yml"), // old default for the Linux service
+			filepath.Join(string(filepath.Separator), "etc", "minerd", "minerd.yml"),
+			filepath.Join(string(filepath.Separator), "var", "lib", "minerd", "minerd.yml"), // old default for the Linux service
 		)
 	}
 	return paths
@@ -63,20 +64,20 @@ func defaultDataDirectory(fp string) string {
 	}
 
 	// check for databases in the current directory
-	if _, err := os.Stat("walletd.db"); err == nil {
+	if _, err := os.Stat("minerd.db"); err == nil {
 		return "."
-	} else if _, err := os.Stat("walletd.sqlite3"); err == nil {
+	} else if _, err := os.Stat("minerd.sqlite3"); err == nil {
 		return "."
 	}
 
 	// default to the operating system's application directory
 	switch runtime.GOOS {
 	case "windows":
-		return filepath.Join(os.Getenv("APPDATA"), "walletd")
+		return filepath.Join(os.Getenv("APPDATA"), "minerd")
 	case "darwin":
-		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "walletd")
+		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "minerd")
 	case "linux", "freebsd", "openbsd":
-		return filepath.Join(string(filepath.Separator), "var", "lib", "walletd")
+		return filepath.Join(string(filepath.Separator), "var", "lib", "minerd")
 	default:
 		return "."
 	}
@@ -89,7 +90,7 @@ func setupUPNP(ctx context.Context, port uint16, log *zap.Logger) (string, error
 	if err != nil {
 		return "", fmt.Errorf("couldn't discover UPnP router: %w", err)
 	} else if !d.IsForwarded(port, "TCP") {
-		if err := d.Forward(uint16(port), "TCP", "walletd"); err != nil {
+		if err := d.Forward(uint16(port), "TCP", "minerd"); err != nil {
 			log.Debug("couldn't forward port", zap.Error(err))
 		} else {
 			log.Debug("upnp: forwarded p2p port", zap.Uint16("port", port))
@@ -162,7 +163,7 @@ func runNode(ctx context.Context, cfg config.Config, log *zap.Logger, enableDebu
 		syncerAddr = net.JoinHostPort("127.0.0.1", port)
 	}
 
-	store, err := sqlite.OpenDatabase(filepath.Join(cfg.Directory, "walletd.sqlite3"), log.Named("sqlite3"))
+	store, err := sqlite.OpenDatabase(filepath.Join(cfg.Directory, "minerd.sqlite3"), log.Named("sqlite3"))
 	if err != nil {
 		return fmt.Errorf("failed to open wallet database: %w", err)
 	}
@@ -202,13 +203,17 @@ func runNode(ctx context.Context, cfg config.Config, log *zap.Logger, enableDebu
 	}
 	defer wm.Close()
 
-	apiOpts := []api.ServerOption{
+	walletdAPIOpts := []wAPI.ServerOption{
+		wAPI.WithLogger(log.Named("api")),
+		wAPI.WithPublicEndpoints(cfg.HTTP.PublicEndpoints),
+		wAPI.WithBasicAuth(cfg.HTTP.Password),
+	}
+	minerAPIOpts := []api.ServerOption{
 		api.WithLogger(log.Named("api")),
-		api.WithPublicEndpoints(cfg.HTTP.PublicEndpoints),
 		api.WithBasicAuth(cfg.HTTP.Password),
 	}
 	if enableDebug {
-		apiOpts = append(apiOpts, api.WithDebug())
+		walletdAPIOpts = append(walletdAPIOpts, wAPI.WithDebug())
 	}
 	if cfg.KeyStore.Enabled {
 		km, err := keys.NewManager(store, cfg.KeyStore.Secret)
@@ -217,15 +222,23 @@ func runNode(ctx context.Context, cfg config.Config, log *zap.Logger, enableDebu
 		}
 		defer km.Close()
 
-		apiOpts = append(apiOpts, api.WithKeyManager(km))
+		walletdAPIOpts = append(walletdAPIOpts, wAPI.WithKeyManager(km))
 	}
-	api := api.NewServer(cm, s, wm, apiOpts...)
+	walletdAPI := wAPI.NewServer(cm, s, wm, walletdAPIOpts...)
+	minerAPI := api.NewServer(cm, s, minerAPIOpts...)
 	web := walletd.Handler()
 	server := &http.Server{
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// serve mining API
+			if strings.HasPrefix(r.URL.Path, "/api/mining") {
+				r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api/mining")
+				minerAPI.ServeHTTP(w, r)
+				return
+			}
+			// serve walletd API
 			if strings.HasPrefix(r.URL.Path, "/api") {
 				r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api")
-				api.ServeHTTP(w, r)
+				walletdAPI.ServeHTTP(w, r)
 				return
 			}
 			web.ServeHTTP(w, r)

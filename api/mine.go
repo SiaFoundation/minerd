@@ -2,9 +2,7 @@ package api
 
 import (
 	"bytes"
-	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/big"
 
@@ -133,28 +131,6 @@ func bigToCompact(n *big.Int) uint32 {
 		compact |= 0x00800000
 	}
 	return compact
-}
-
-// mineBlock constructs a block from the provided address and the transactions
-// in the txpool, and attempts to find a nonce for it that meets the PoW target.
-func mineBlock(ctx context.Context, cm ChainManager, addr types.Address) (types.Block, error) {
-	b, cs := unsolvedBlock(cm, addr)
-	factor := cs.NonceFactor()
-	for b.ID().CmpWork(cs.ChildTarget) < 0 {
-		select {
-		case <-ctx.Done():
-			return types.Block{}, ctx.Err()
-		default:
-		}
-
-		// tip changed, abort mining
-		if cm.Tip() != cs.Index {
-			return types.Block{}, errors.New("tip changed")
-		}
-
-		b.Nonce += factor
-	}
-	return b, nil
 }
 
 func unsolvedBlock(cm ChainManager, addr types.Address) (types.Block, consensus.State) {
