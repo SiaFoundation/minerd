@@ -6,7 +6,7 @@ toolchain go1.23.2
 
 require (
 	go.sia.tech/core v0.10.4
-	go.sia.tech/coreutils v0.12.0
+	go.sia.tech/coreutils v0.12.1
 	go.sia.tech/jape v0.12.1
 	go.sia.tech/walletd/v2 v2.1.0-beta.1.0.20250311094204-c4ca561992c0
 	go.sia.tech/web/walletd v0.29.1
