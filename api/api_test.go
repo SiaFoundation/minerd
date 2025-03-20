@@ -34,7 +34,11 @@ func startMinerServer(tb testing.TB, cn *testutil.ConsensusNode, log *zap.Logger
 	}
 	tb.Cleanup(func() { wm.Close() })
 
-	minerAPI := api.NewServer(cn.Chain, cn.Syncer, api.WithLogger(log))
+	addrKey := types.GeneratePrivateKey()
+	uc := types.StandardUnlockConditions(addrKey.PublicKey())
+	payoutAddr := uc.UnlockHash()
+
+	minerAPI := api.NewServer(cn.Chain, cn.Syncer, payoutAddr, api.WithLogger(log))
 	wAPI := walletdAPI.NewServer(cn.Chain, cn.Syncer, wm)
 	server := &http.Server{
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +57,23 @@ func startMinerServer(tb testing.TB, cn *testutil.ConsensusNode, log *zap.Logger
 	tb.Cleanup(func() { server.Close() })
 
 	go server.Serve(l)
-	return api.NewClient("http://"+l.Addr().String(), "password")
+
+	client := api.NewClient("http://"+l.Addr().String(), "password")
+	payouts, err := client.AddWallet(walletdAPI.WalletUpdateRequest{Name: "payouts"})
+	if err != nil {
+		tb.Fatal(err)
+	}
+	payoutsClient := client.Wallet(payouts.ID)
+	err = payoutsClient.AddAddress(wallet.Address{
+		Address: payoutAddr,
+		SpendPolicy: &types.SpendPolicy{
+			Type: types.PolicyTypeUnlockConditions(uc),
+		},
+	})
+	if err != nil {
+		tb.Fatal(err)
+	}
+	return client
 }
 
 func TestMineGetBlockTemplate(t *testing.T) {
@@ -65,12 +85,72 @@ func TestMineGetBlockTemplate(t *testing.T) {
 		cn := testutil.NewConsensusNode(t, n, genesisBlock, log)
 		c := startMinerServer(t, cn, log)
 
-		// mine a few blocks to avoid starting at 0
-		cn.MineBlocks(t, types.Address{}, 10)
+		// mine a few blocks to avoid starting at 0 to a premine wallet
+		premineWallet, err := c.AddWallet(walletdAPI.WalletUpdateRequest{
+			Name: "premine",
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		premineKey := types.GeneratePrivateKey()
+		premineUC := types.StandardUnlockConditions(premineKey.PublicKey())
+		err = c.Wallet(premineWallet.ID).AddAddress(wallet.Address{
+			Address: premineUC.UnlockHash(),
+			SpendPolicy: &types.SpendPolicy{
+				Type: types.PolicyTypeUnlockConditions(premineUC),
+			},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		cn.MineBlocks(t, premineUC.UnlockHash(), 10)
+
+		// send a transaction to make sure we mine a block with transaction
+		if cn.Chain.Tip().Height < n.HardforkV2.AllowHeight {
+			// V1 transaction
+			resp, err := c.Wallet(premineWallet.ID).Construct([]types.SiacoinOutput{
+				{
+					Address: premineUC.UnlockHash(),
+					Value:   types.Siacoins(100),
+				},
+			}, nil, premineUC.UnlockHash())
+			if err != nil {
+				t.Fatal(err)
+			}
+			txn := resp.Transaction
+			for i, txnSig := range txn.Signatures {
+				sigHash := cn.Chain.TipState().WholeSigHash(txn, txnSig.ParentID, 0, 0, nil)
+				sig := premineKey.SignHash(sigHash)
+				txn.Signatures[i].Signature = sig[:]
+			}
+			if err := c.TxpoolBroadcast(resp.Basis, []types.Transaction{txn}, nil); err != nil {
+				t.Fatal(err)
+			}
+		} else {
+			// V2 transaction
+			resp, err := c.Wallet(premineWallet.ID).ConstructV2([]types.SiacoinOutput{
+				{
+					Address: premineUC.UnlockHash(),
+					Value:   types.Siacoins(100),
+				},
+			}, nil, premineUC.UnlockHash())
+			if err != nil {
+				t.Fatal(err)
+			}
+			txn := resp.Transaction
+			sigHash := cn.Chain.TipState().InputSigHash(txn)
+			for i := range txn.SiacoinInputs {
+				txn.SiacoinInputs[i].SatisfiedPolicy.Signatures = []types.Signature{premineKey.SignHash(sigHash)}
+			}
+
+			// broadcast the transaction
+			if err := c.TxpoolBroadcast(resp.Basis, nil, []types.V2Transaction{txn}); err != nil {
+				t.Fatal(err)
+			}
+		}
 
 		// get block template
-		minerAddr := types.Address{1, 2, 3}
-		resp, err := c.MiningGetBlockTemplate(minerAddr, "")
+		resp, err := c.MiningGetBlockTemplate("")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -139,7 +219,7 @@ func TestMineGetBlockTemplate(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			v2BlockData.Commitment = cs.Commitment(cs.TransactionsCommitment(txns, v2Txns), minerAddr)
+			v2BlockData.Commitment = cs.Commitment(cs.TransactionsCommitment(txns, v2Txns), minerPayout.Address)
 		}
 
 		// construct block

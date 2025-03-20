@@ -27,6 +27,7 @@ const (
 	dataDirEnvVar        = "MINERD_DATA_DIR"
 	logFileEnvVar        = "MINERD_LOG_FILE_PATH"
 	keystoreSecretEnvVar = "MINERD_KEYSTORE_SECRET"
+	payoutAddrEnvVar     = "MINERD_PAYOUT_ADDRESS"
 )
 
 const (
@@ -57,42 +58,56 @@ Runs a CPU miner. Not intended for production use.
 `
 )
 
-var cfg = config.Config{
-	Name:          "minerd",
-	Directory:     os.Getenv(dataDirEnvVar),
-	AutoOpenWebUI: true,
-	HTTP: config.HTTP{
-		Address:         "localhost:9980",
-		Password:        os.Getenv(apiPasswordEnvVar),
-		PublicEndpoints: false,
-	},
-	Syncer: config.Syncer{
-		Address:   ":9981",
-		Bootstrap: true,
-	},
-	Consensus: config.Consensus{
-		Network: "mainnet",
-	},
-	Index: config.Index{
-		Mode:      wallet.IndexModePersonal,
-		BatchSize: 1000,
-	},
-	KeyStore: config.KeyStore{
-		Enabled: false,
-		Secret:  os.Getenv(keystoreSecretEnvVar),
-	},
-	Log: config.Log{
-		Level: "info",
-		File: config.LogFile{
-			Enabled: true,
-			Format:  "json",
-			Path:    os.Getenv(logFileEnvVar),
+type Mining struct {
+	PayoutAddress string `yaml:"payoutAddress,omitempty"`
+}
+
+type Config struct {
+	config.Config `yaml:",inline"`
+	Mining        Mining `yaml:"mining,omitempty"`
+}
+
+var cfg = Config{
+	Config: config.Config{
+		Name:          "minerd",
+		Directory:     os.Getenv(dataDirEnvVar),
+		AutoOpenWebUI: true,
+		HTTP: config.HTTP{
+			Address:         "localhost:9980",
+			Password:        os.Getenv(apiPasswordEnvVar),
+			PublicEndpoints: false,
 		},
-		StdOut: config.StdOut{
-			Enabled:    true,
-			Format:     "human",
-			EnableANSI: runtime.GOOS != "windows",
+		Syncer: config.Syncer{
+			Address:   ":9981",
+			Bootstrap: true,
 		},
+		Consensus: config.Consensus{
+			Network: "mainnet",
+		},
+		Index: config.Index{
+			Mode:      wallet.IndexModePersonal,
+			BatchSize: 1000,
+		},
+		KeyStore: config.KeyStore{
+			Enabled: false,
+			Secret:  os.Getenv(keystoreSecretEnvVar),
+		},
+		Log: config.Log{
+			Level: "info",
+			File: config.LogFile{
+				Enabled: true,
+				Format:  "json",
+				Path:    os.Getenv(logFileEnvVar),
+			},
+			StdOut: config.StdOut{
+				Enabled:    true,
+				Format:     "human",
+				EnableANSI: runtime.GOOS != "windows",
+			},
+		},
+	},
+	Mining: Mining{
+		PayoutAddress: os.Getenv(payoutAddrEnvVar),
 	},
 }
 
@@ -132,7 +147,7 @@ func checkFatalError(context string, err error) {
 // the config file is returned.
 func tryLoadConfig() string {
 	for _, fp := range tryConfigPaths() {
-		if err := config.LoadFile(fp, &cfg); err == nil {
+		if err := LoadFile(fp, &cfg); err == nil {
 			return fp
 		} else if !errors.Is(err, os.ErrNotExist) {
 			checkFatalError("failed to load config file", err)
@@ -225,6 +240,8 @@ func main() {
 
 	rootCmd.StringVar(&indexModeStr, "index.mode", indexModeStr, "address index mode (personal, full, none)")
 	rootCmd.IntVar(&cfg.Index.BatchSize, "index.batch", cfg.Index.BatchSize, "max number of blocks to index at a time. Increasing this will increase scan speed, but also increase memory and cpu usage.")
+
+	rootCmd.StringVar(&cfg.Mining.PayoutAddress, "mining.payoutAddress", cfg.Mining.PayoutAddress, "payout address to include within block templates")
 
 	versionCmd := flagg.New("version", versionUsage)
 	seedCmd := flagg.New("seed", seedUsage)

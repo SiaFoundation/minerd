@@ -198,8 +198,7 @@ type ElementSpentResponse struct {
 // MiningGetBlockTemplateRequest is the request type for
 // /mining/getblocktemplate.
 type MiningGetBlockTemplateRequest struct {
-	PayoutAddress types.Address `json:"payoutAddress,omitempty"`
-	LongPollID    string        `json:"longpollid,omitempty"`
+	LongPollID string `json:"longpollid,omitempty"`
 }
 
 // MiningGetBlockTemplateResponse is the response type for
