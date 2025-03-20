@@ -22,7 +22,6 @@ import (
 	"go.sia.tech/minerd/api"
 	wAPI "go.sia.tech/walletd/v2/api"
 	"go.sia.tech/walletd/v2/build"
-	"go.sia.tech/walletd/v2/config"
 	"go.sia.tech/walletd/v2/keys"
 	"go.sia.tech/walletd/v2/persist/sqlite"
 	"go.sia.tech/walletd/v2/wallet"
@@ -99,7 +98,7 @@ func setupUPNP(ctx context.Context, port uint16, log *zap.Logger) (string, error
 	return d.ExternalIP()
 }
 
-func runNode(ctx context.Context, cfg config.Config, log *zap.Logger, enableDebug bool) error {
+func runNode(ctx context.Context, cfg Config, log *zap.Logger, enableDebug bool) error {
 	var network *consensus.Network
 	var genesisBlock types.Block
 	var bootstrapPeers []string
@@ -115,6 +114,13 @@ func runNode(ctx context.Context, cfg config.Config, log *zap.Logger, enableDebu
 		bootstrapPeers = syncer.AnagamiBootstrapPeers
 	default:
 		return errors.New("invalid network: must be one of 'mainnet', 'zen', or 'anagami'")
+	}
+
+	payoutAddr := types.VoidAddress
+	if cfg.Mining.PayoutAddress != "" {
+		if err := payoutAddr.UnmarshalText([]byte(cfg.Mining.PayoutAddress)); err != nil {
+			return fmt.Errorf("failed to parse payout address: %w", err)
+		}
 	}
 
 	bdb, err := coreutils.OpenBoltChainDB(filepath.Join(cfg.Directory, "consensus.db"))
@@ -225,7 +231,7 @@ func runNode(ctx context.Context, cfg config.Config, log *zap.Logger, enableDebu
 		walletdAPIOpts = append(walletdAPIOpts, wAPI.WithKeyManager(km))
 	}
 	walletdAPI := wAPI.NewServer(cm, s, wm, walletdAPIOpts...)
-	minerAPI := api.NewServer(cm, s, minerAPIOpts...)
+	minerAPI := api.NewServer(cm, s, payoutAddr, minerAPIOpts...)
 	web := walletd.Handler()
 	server := &http.Server{
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

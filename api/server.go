@@ -71,6 +71,7 @@ type server struct {
 	debugEnabled    bool
 	publicEndpoints bool
 	password        string
+	payoutAddr      types.Address
 
 	log *zap.Logger
 	cm  ChainManager
@@ -78,17 +79,19 @@ type server struct {
 }
 
 func (s *server) miningGetBlockTemplateHandler(jc jape.Context) {
+	if s.payoutAddr == types.VoidAddress {
+		jc.Error(errors.New("can't use getblocktemplate without specifying a payout address"), http.StatusServiceUnavailable)
+		return
+	}
+
 	var req MiningGetBlockTemplateRequest
 	if jc.Decode(&req) != nil {
-		return
-	} else if req.PayoutAddress == types.VoidAddress {
-		jc.Error(errors.New("payout address can't be empty"), http.StatusBadRequest)
 		return
 	}
 
 	// TODO: add polling
 
-	template, err := generateBlockTemplate(s.cm, req.PayoutAddress)
+	template, err := generateBlockTemplate(s.cm, s.payoutAddr)
 	if jc.Check("failed to generate block template", err) != nil {
 		return
 	}
@@ -134,10 +137,11 @@ func (s *server) miningSubmitBlockTemplateHandler(jc jape.Context) {
 }
 
 // NewServer returns an HTTP handler that serves the minerd API.
-func NewServer(cm ChainManager, s Syncer, opts ...ServerOption) http.Handler {
+func NewServer(cm ChainManager, s Syncer, payoutAddr types.Address, opts ...ServerOption) http.Handler {
 	srv := server{
 		log:             zap.NewNop(),
 		debugEnabled:    false,
+		payoutAddr:      payoutAddr,
 		publicEndpoints: false,
 		startTime:       time.Now(),
 

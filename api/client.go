@@ -17,10 +17,9 @@ type Client struct {
 }
 
 // MiningGetBlockTemplate returns a block template for mining.
-func (c *Client) MiningGetBlockTemplate(payoutAddr types.Address, longPollID string) (resp MiningGetBlockTemplateResponse, err error) {
+func (c *Client) MiningGetBlockTemplate(longPollID string) (resp MiningGetBlockTemplateResponse, err error) {
 	err = c.c.POST("/mining/getblocktemplate", MiningGetBlockTemplateRequest{
-		LongPollID:    longPollID,
-		PayoutAddress: payoutAddr,
+		LongPollID: longPollID,
 	}, &resp)
 	return
 }
