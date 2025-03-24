@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"net/http"
+	"sync"
 	"time"
 
 	"go.sia.tech/jape"
@@ -49,6 +50,8 @@ type (
 		V2PoolTransactions() []types.V2Transaction
 		AddPoolTransactions(txns []types.Transaction) (bool, error)
 		AddV2PoolTransactions(index types.ChainIndex, txns []types.V2Transaction) (bool, error)
+		OnPoolChange(fn func()) (cancel func())
+		OnReorg(fn func(types.ChainIndex)) (cancel func())
 		UnconfirmedParents(txn types.Transaction) []types.Transaction
 		UpdateV2TransactionSet(txns []types.V2Transaction, from types.ChainIndex, to types.ChainIndex) ([]types.V2Transaction, error)
 	}
@@ -73,9 +76,23 @@ type server struct {
 	password        string
 	payoutAddr      types.Address
 
+	cachedTemplateMu          sync.Mutex
+	cachedTemplate            *MiningGetBlockTemplateResponse // cached template, set to 'nil' when invalidated
+	cachedTemplateInvalidated chan struct{}                   // closed when the cached template is invalidated
+
 	log *zap.Logger
 	cm  ChainManager
 	s   Syncer
+}
+
+func (s *server) invalidateCachedTemplate() {
+	s.cachedTemplateMu.Lock()
+	s.cachedTemplate = nil
+	if s.cachedTemplateInvalidated != nil {
+		close(s.cachedTemplateInvalidated)
+	}
+	s.cachedTemplateInvalidated = make(chan struct{})
+	s.cachedTemplateMu.Unlock()
 }
 
 func (s *server) miningGetBlockTemplateHandler(jc jape.Context) {
@@ -89,13 +106,41 @@ func (s *server) miningGetBlockTemplateHandler(jc jape.Context) {
 		return
 	}
 
-	// TODO: add polling
+	for {
+		// get template or generate new one
+		template, invalidateChan, err := func() (MiningGetBlockTemplateResponse, <-chan struct{}, error) {
+			s.cachedTemplateMu.Lock()
+			defer s.cachedTemplateMu.Unlock()
 
-	template, err := generateBlockTemplate(s.cm, s.payoutAddr)
-	if jc.Check("failed to generate block template", err) != nil {
-		return
+			// generate new template if required
+			if s.cachedTemplate == nil {
+				template, err := generateBlockTemplate(s.cm, s.payoutAddr)
+				if err != nil {
+					return MiningGetBlockTemplateResponse{}, nil, err
+				}
+				s.cachedTemplate = &template
+			}
+
+			return *s.cachedTemplate, s.cachedTemplateInvalidated, nil
+		}()
+		if jc.Check("failed to get template", err) != nil {
+			return
+		}
+
+		// if we got a new template, return it
+		if template.LongPollID != req.LongPollID {
+			jc.Encode(s.cachedTemplate)
+			return
+		}
+
+		// otherwise, wait until the template is invalidated again
+		select {
+		case <-jc.Request.Context().Done():
+			return
+		case <-invalidateChan:
+			continue
+		}
 	}
-	jc.Encode(template)
 }
 
 func (s *server) miningSubmitBlockTemplateHandler(jc jape.Context) {
@@ -145,6 +190,8 @@ func NewServer(cm ChainManager, s Syncer, payoutAddr types.Address, opts ...Serv
 		publicEndpoints: false,
 		startTime:       time.Now(),
 
+		cachedTemplateInvalidated: make(chan struct{}, 1),
+
 		cm: cm,
 		s:  s,
 	}
@@ -178,6 +225,14 @@ func NewServer(cm ChainManager, s Syncer, payoutAddr types.Address, opts ...Serv
 			h(jc)
 		}
 	}
+
+	// invalidate cached template on pool change
+	_ = cm.OnPoolChange(srv.invalidateCachedTemplate)
+
+	// invlaidate cached template on reorg
+	_ = cm.OnReorg(func(_ types.ChainIndex) {
+		srv.invalidateCachedTemplate()
+	})
 
 	handlers := map[string]jape.Handler{
 		"POST /getblocktemplate": wrapAuthHandler(srv.miningGetBlockTemplateHandler),
