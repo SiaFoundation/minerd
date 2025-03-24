@@ -276,3 +276,40 @@ func TestMineGetBlockTemplate(t *testing.T) {
 		test(network, genesisBlock)
 	})
 }
+
+func TestMineGetBlockTemplateLongpolling(t *testing.T) {
+	log := zaptest.NewLogger(t)
+
+	t.Helper()
+
+	network, genesisBlock := testutil.V1Network()
+	cn := testutil.NewConsensusNode(t, network, genesisBlock, log)
+	c := startMinerServer(t, cn, log)
+
+	// get block template
+	resp, err := c.MiningGetBlockTemplate("")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// get block template again with same id, this should block
+	done := make(chan struct{})
+	go func(longpollid string) {
+		defer close(done)
+
+		_, err := c.MiningGetBlockTemplate(longpollid)
+		if err != nil {
+			t.Error(err)
+		}
+	}(resp.LongPollID)
+
+	select {
+	case <-done:
+		t.Fatal("expected longpolling to block")
+	case <-time.After(time.Second):
+	}
+
+	// mine a block to unblock API
+	cn.MineBlocks(t, types.VoidAddress, 1)
+	<-done
+}
