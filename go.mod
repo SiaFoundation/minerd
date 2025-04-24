@@ -1,7 +1,8 @@
 module go.sia.tech/minerd
 
-go 1.23.1
-toolchain go1.24.1
+go 1.23.2
+
+toolchain go1.24.2
 
 require (
 	go.sia.tech/core v0.11.0

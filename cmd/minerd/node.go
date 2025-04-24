@@ -22,7 +22,6 @@ import (
 	"go.sia.tech/minerd/api"
 	wAPI "go.sia.tech/walletd/v2/api"
 	"go.sia.tech/walletd/v2/build"
-	"go.sia.tech/walletd/v2/keys"
 	"go.sia.tech/walletd/v2/persist/sqlite"
 	"go.sia.tech/walletd/v2/wallet"
 	"go.sia.tech/web/walletd"
@@ -129,7 +128,7 @@ func runNode(ctx context.Context, cfg Config, log *zap.Logger, enableDebug bool)
 	}
 	defer bdb.Close()
 
-	dbstore, tipState, err := chain.NewDBStore(bdb, network, genesisBlock)
+	dbstore, tipState, err := chain.NewDBStore(bdb, network, genesisBlock, chain.NewZapMigrationLogger(log.Named("chaindb")))
 	if err != nil {
 		return fmt.Errorf("failed to create chain store: %w", err)
 	}
@@ -220,15 +219,6 @@ func runNode(ctx context.Context, cfg Config, log *zap.Logger, enableDebug bool)
 	}
 	if enableDebug {
 		walletdAPIOpts = append(walletdAPIOpts, wAPI.WithDebug())
-	}
-	if cfg.KeyStore.Enabled {
-		km, err := keys.NewManager(store, cfg.KeyStore.Secret)
-		if err != nil {
-			return fmt.Errorf("failed to create key manager: %w", err)
-		}
-		defer km.Close()
-
-		walletdAPIOpts = append(walletdAPIOpts, wAPI.WithKeyManager(km))
 	}
 	walletdAPI := wAPI.NewServer(cm, s, wm, walletdAPIOpts...)
 	minerAPI := api.NewServer(cm, s, payoutAddr, minerAPIOpts...)
