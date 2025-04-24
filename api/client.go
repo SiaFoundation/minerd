@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"fmt"
 
@@ -17,15 +18,15 @@ type Client struct {
 }
 
 // MiningGetBlockTemplate returns a block template for mining.
-func (c *Client) MiningGetBlockTemplate(longPollID string) (resp MiningGetBlockTemplateResponse, err error) {
-	err = c.c.POST("/mining/getblocktemplate", MiningGetBlockTemplateRequest{
+func (c *Client) MiningGetBlockTemplate(ctx context.Context, longPollID string) (resp MiningGetBlockTemplateResponse, err error) {
+	err = c.c.POST(ctx, "/mining/getblocktemplate", MiningGetBlockTemplateRequest{
 		LongPollID: longPollID,
 	}, &resp)
 	return
 }
 
 // MiningSubmitBlock submits a mined block to the network.
-func (c *Client) MiningSubmitBlock(b types.Block) error {
+func (c *Client) MiningSubmitBlock(ctx context.Context, b types.Block) error {
 	buf := new(bytes.Buffer)
 	enc := types.NewEncoder(buf)
 	if b.V2 == nil {
@@ -36,7 +37,7 @@ func (c *Client) MiningSubmitBlock(b types.Block) error {
 	if err := enc.Flush(); err != nil {
 		return fmt.Errorf("failed to encode block: %w", err)
 	}
-	return c.c.POST("/mining/submitblock", MiningSubmitBlockRequest{
+	return c.c.POST(ctx, "/mining/submitblock", MiningSubmitBlockRequest{
 		Params: []string{hex.EncodeToString(buf.Bytes())},
 	}, nil)
 }

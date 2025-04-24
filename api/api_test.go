@@ -150,7 +150,7 @@ func TestMineGetBlockTemplate(t *testing.T) {
 		}
 
 		// get block template
-		resp, err := c.MiningGetBlockTemplate("")
+		resp, err := c.MiningGetBlockTemplate(context.Background(), "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -253,7 +253,7 @@ func TestMineGetBlockTemplate(t *testing.T) {
 		mineBlock(&b, target)
 
 		// submit block
-		if err := c.MiningSubmitBlock(b); err != nil {
+		if err := c.MiningSubmitBlock(context.Background(), b); err != nil {
 			t.Fatal(err)
 		}
 
@@ -287,7 +287,7 @@ func TestMineGetBlockTemplateLongpolling(t *testing.T) {
 	c := startMinerServer(t, cn, log)
 
 	// get block template
-	resp, err := c.MiningGetBlockTemplate("")
+	resp, err := c.MiningGetBlockTemplate(context.Background(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -297,7 +297,7 @@ func TestMineGetBlockTemplateLongpolling(t *testing.T) {
 	go func(longpollid string) {
 		defer close(done)
 
-		_, err := c.MiningGetBlockTemplate(longpollid)
+		_, err := c.MiningGetBlockTemplate(context.Background(), longpollid)
 		if err != nil {
 			t.Error(err)
 		}

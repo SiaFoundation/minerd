@@ -178,7 +178,7 @@ func (s *server) miningSubmitBlockTemplateHandler(jc jape.Context) {
 	} else {
 		s.s.BroadcastV2BlockOutline(gateway.OutlineBlock(block, s.cm.PoolTransactions(), s.cm.V2PoolTransactions()))
 	}
-	jc.EmptyResonse()
+	jc.Encode(nil)
 }
 
 // NewServer returns an HTTP handler that serves the minerd API.
