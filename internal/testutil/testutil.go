@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"context"
 	"net"
 	"path/filepath"
 	"testing"
@@ -21,7 +22,7 @@ type (
 	ConsensusNode struct {
 		Store  *sqlite.Store
 		Chain  *chain.Manager
-		Syncer *syncer.Syncer
+		Syncer *MockSyncer
 	}
 )
 
@@ -87,7 +88,7 @@ func NewConsensusNode(tb testing.TB, n *consensus.Network, genesis types.Block, 
 	return &ConsensusNode{
 		Store:  store,
 		Chain:  cm,
-		Syncer: s,
+		Syncer: &MockSyncer{},
 	}
 }
 
@@ -99,4 +100,30 @@ func V1Network() (*consensus.Network, types.Block) {
 // V2Network returns a test network and genesis block with early V2 hardforks
 func V2Network() (*consensus.Network, types.Block) {
 	return testutil.V2Network()
+}
+
+type MockSyncer struct {
+}
+
+func (s *MockSyncer) Addr() string {
+	return ""
+}
+
+func (s *MockSyncer) BroadcastHeader(h types.BlockHeader) error               { return nil }
+func (s *MockSyncer) BroadcastV2BlockOutline(bo gateway.V2BlockOutline) error { return nil }
+func (s *MockSyncer) BroadcastTransactionSet([]types.Transaction) error       { return nil }
+func (s *MockSyncer) BroadcastV2TransactionSet(index types.ChainIndex, txns []types.V2Transaction) error {
+	return nil
+}
+
+func (s *MockSyncer) Connect(ctx context.Context, addr string) (*syncer.Peer, error) {
+	return new(syncer.Peer), nil
+}
+
+func (s *MockSyncer) PeerInfo(addr string) (syncer.PeerInfo, error) {
+	return syncer.PeerInfo{}, nil
+}
+
+func (s *MockSyncer) Peers() (peers []*syncer.Peer) {
+	return
 }
