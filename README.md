@@ -77,8 +77,6 @@ the transaction is a V1 or V2 transaction.
  }
 ```
 
-**⚠️ Longpolling is not supported yet.**
-
 ### `POST /api/miner/submitblock`
 
 Submits a block to the network. The block is expected to be either V1 or V2
