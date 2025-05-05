@@ -5,9 +5,9 @@ go 1.23.2
 toolchain go1.24.2
 
 require (
-	go.sia.tech/core v0.11.0
-	go.sia.tech/coreutils v0.13.1
-	go.sia.tech/jape v0.13.1
+	go.sia.tech/core v0.12.0
+	go.sia.tech/coreutils v0.13.2
+	go.sia.tech/jape v0.14.0
 	go.sia.tech/walletd/v2 v2.2.1
 	go.sia.tech/web/walletd v0.29.2
 	go.uber.org/zap v1.27.0
