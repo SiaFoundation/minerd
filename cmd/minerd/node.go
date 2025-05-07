@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -97,6 +98,24 @@ func setupUPNP(ctx context.Context, port uint16, log *zap.Logger) (string, error
 	return d.ExternalIP()
 }
 
+func loadCustomNetwork(fp string) (*consensus.Network, types.Block, error) {
+	f, err := os.Open(fp)
+	if err != nil {
+		return nil, types.Block{}, fmt.Errorf("failed to open network file: %w", err)
+	}
+	defer f.Close()
+
+	var network struct {
+		Network consensus.Network `json:"network" yaml:"network"`
+		Genesis types.Block       `json:"genesis" yaml:"genesis"`
+	}
+
+	if err := json.NewDecoder(f).Decode(&network); err != nil {
+		return nil, types.Block{}, fmt.Errorf("failed to decode JSON network file: %w", err)
+	}
+	return &network.Network, network.Genesis, nil
+}
+
 func runNode(ctx context.Context, cfg Config, log *zap.Logger, enableDebug bool) error {
 	var network *consensus.Network
 	var genesisBlock types.Block
@@ -112,9 +131,14 @@ func runNode(ctx context.Context, cfg Config, log *zap.Logger, enableDebug bool)
 		network, genesisBlock = chain.TestnetAnagami()
 		bootstrapPeers = syncer.AnagamiBootstrapPeers
 	default:
-		return errors.New("invalid network: must be one of 'mainnet', 'zen', or 'anagami'")
+		var err error
+		network, genesisBlock, err = loadCustomNetwork(cfg.Consensus.Network)
+		if errors.Is(err, os.ErrNotExist) {
+			return errors.New("invalid network: must be one of 'mainnet', 'zen', or 'anagami'")
+		} else if err != nil {
+			return fmt.Errorf("failed to load custom network: %w", err)
+		}
 	}
-
 	payoutAddr := types.VoidAddress
 	if cfg.Mining.PayoutAddress != "" {
 		if err := payoutAddr.UnmarshalText([]byte(cfg.Mining.PayoutAddress)); err != nil {
