@@ -123,7 +123,7 @@ func TestMineGetBlockTemplate(t *testing.T) {
 				sig := premineKey.SignHash(sigHash)
 				txn.Signatures[i].Signature = sig[:]
 			}
-			if err := c.TxpoolBroadcast(resp.Basis, []types.Transaction{txn}, nil); err != nil {
+			if _, err := c.TxpoolBroadcast(resp.Basis, []types.Transaction{txn}, nil); err != nil {
 				t.Fatal(err)
 			}
 		} else {
@@ -144,7 +144,7 @@ func TestMineGetBlockTemplate(t *testing.T) {
 			}
 
 			// broadcast the transaction
-			if err := c.TxpoolBroadcast(resp.Basis, nil, []types.V2Transaction{txn}); err != nil {
+			if _, err := c.TxpoolBroadcast(resp.Basis, nil, []types.V2Transaction{txn}); err != nil {
 				t.Fatal(err)
 			}
 		}
