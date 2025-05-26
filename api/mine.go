@@ -176,7 +176,7 @@ retry:
 		b.MinerPayouts[0].Value = b.MinerPayouts[0].Value.Add(txn.MinerFee)
 	}
 	if b.V2 != nil {
-		b.V2.Commitment = cs.Commitment(cs.TransactionsCommitment(b.Transactions, b.V2Transactions()), addr)
+		b.V2.Commitment = cs.Commitment(addr, b.Transactions, b.V2Transactions())
 	}
 	return b, cs
 }

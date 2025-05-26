@@ -219,7 +219,7 @@ func TestMineGetBlockTemplate(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			v2BlockData.Commitment = cs.Commitment(cs.TransactionsCommitment(txns, v2Txns), minerPayout.Address)
+			v2BlockData.Commitment = cs.Commitment(minerPayout.Address, txns, v2Txns)
 		}
 
 		// construct block
