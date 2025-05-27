@@ -66,7 +66,7 @@ func NewConsensusNode(tb testing.TB, n *consensus.Network, genesis types.Block, 
 	}
 	cm := chain.NewManager(dbstore, tipState)
 
-	store, err := sqlite.OpenDatabase(filepath.Join(tb.TempDir(), "minerd.sqlite"), log.Named("sqlite3"))
+	store, err := sqlite.OpenDatabase(filepath.Join(tb.TempDir(), "minerd.sqlite"), sqlite.WithLog(log.Named("sqlite3")))
 	if err != nil {
 		tb.Fatal(err)
 	}

@@ -192,7 +192,7 @@ func runNode(ctx context.Context, cfg Config, log *zap.Logger, enableDebug bool)
 		syncerAddr = net.JoinHostPort("127.0.0.1", port)
 	}
 
-	store, err := sqlite.OpenDatabase(filepath.Join(cfg.Directory, "minerd.sqlite3"), log.Named("sqlite3"))
+	store, err := sqlite.OpenDatabase(filepath.Join(cfg.Directory, "minerd.sqlite3"), sqlite.WithLog(log.Named("sqlite3")))
 	if err != nil {
 		return fmt.Errorf("failed to open wallet database: %w", err)
 	}
