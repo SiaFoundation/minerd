@@ -68,15 +68,17 @@ type (
 )
 
 type server struct {
-	startTime       time.Time
-	debugEnabled    bool
-	publicEndpoints bool
-	password        string
-	payoutAddr      types.Address
+	startTime               time.Time
+	debugEnabled            bool
+	publicEndpoints         bool
+	password                string
+	payoutAddr              types.Address
+	poolInvalidationTimeout time.Duration
 
 	cachedTemplateMu          sync.Mutex
 	cachedTemplate            *MiningGetBlockTemplateResponse // cached template, set to 'nil' when invalidated
 	cachedTemplateInvalidated chan struct{}                   // closed when the cached template is invalidated
+	lastPoolInvalidate        time.Time                       // last time the template was invalidated due to a pool change
 
 	log *zap.Logger
 	cm  ChainManager
@@ -183,14 +185,14 @@ func (s *server) miningSubmitBlockTemplateHandler(jc jape.Context) {
 	jc.Encode(nil)
 }
 
-// NewServer returns an HTTP handler that serves the minerd API.
-func NewServer(cm ChainManager, s Syncer, payoutAddr types.Address, opts ...ServerOption) http.Handler {
-	srv := server{
-		log:             zap.NewNop(),
-		debugEnabled:    false,
-		payoutAddr:      payoutAddr,
-		publicEndpoints: false,
-		startTime:       time.Now(),
+func newServer(cm ChainManager, s Syncer, payoutAddr types.Address, opts ...ServerOption) *server {
+	srv := &server{
+		log:                     zap.NewNop(),
+		debugEnabled:            false,
+		payoutAddr:              payoutAddr,
+		poolInvalidationTimeout: 200 * time.Millisecond,
+		publicEndpoints:         false,
+		startTime:               time.Now(),
 
 		cachedTemplateInvalidated: make(chan struct{}, 1),
 
@@ -198,8 +200,14 @@ func NewServer(cm ChainManager, s Syncer, payoutAddr types.Address, opts ...Serv
 		s:  s,
 	}
 	for _, opt := range opts {
-		opt(&srv)
+		opt(srv)
 	}
+	return srv
+}
+
+// NewServer returns an HTTP handler that serves the minerd API.
+func NewServer(cm ChainManager, s Syncer, payoutAddr types.Address, opts ...ServerOption) http.Handler {
+	srv := newServer(cm, s, payoutAddr, opts...)
 
 	// checkAuth checks the request for basic authentication.
 	checkAuth := func(jc jape.Context) bool {
@@ -229,7 +237,11 @@ func NewServer(cm ChainManager, s Syncer, payoutAddr types.Address, opts ...Serv
 	}
 
 	// invalidate cached template on pool change
-	_ = cm.OnPoolChange(srv.invalidateCachedTemplate)
+	_ = cm.OnPoolChange(func() {
+		if srv.shouldPoolChangeInvalidateTemplate() {
+			srv.invalidateCachedTemplate()
+		}
+	})
 
 	// invlaidate cached template on reorg
 	_ = cm.OnReorg(func(_ types.ChainIndex) {
@@ -241,4 +253,16 @@ func NewServer(cm ChainManager, s Syncer, payoutAddr types.Address, opts ...Serv
 		"POST /submitblock":      wrapAuthHandler(srv.miningSubmitBlockTemplateHandler),
 	}
 	return jape.Mux(handlers)
+}
+
+func (s *server) shouldPoolChangeInvalidateTemplate() bool {
+	s.cachedTemplateMu.Lock()
+	defer s.cachedTemplateMu.Unlock()
+	if time.Since(s.lastPoolInvalidate) < s.poolInvalidationTimeout {
+		// if the pool change happened too recently, don't invalidate the
+		// template
+		return false
+	}
+	s.lastPoolInvalidate = time.Now()
+	return true
 }
