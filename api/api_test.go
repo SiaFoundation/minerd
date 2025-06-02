@@ -231,6 +231,11 @@ func TestMineGetBlockTemplate(t *testing.T) {
 			Transactions: txns,
 		}
 
+		// sanity check commitment
+		if b.Header().Commitment != resp.Commitment {
+			t.Fatalf("expected commitment %v, got %v", b.Header().Commitment, resp.Commitment)
+		}
+
 		var target types.BlockID
 		if err := target.UnmarshalText([]byte(resp.Target)); err != nil {
 			t.Fatal(err)

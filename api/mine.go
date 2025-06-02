@@ -70,6 +70,7 @@ func generateBlockTemplate(cm ChainManager, addr types.Address) (MiningGetBlockT
 	}
 
 	return MiningGetBlockTemplateResponse{
+		Commitment:        block.Header().Commitment,
 		Transactions:      txns,
 		MinerPayout:       []MiningGetBlockTemplateResponseTxn{minerPayout},
 		PreviousBlockHash: block.ParentID.String(),
