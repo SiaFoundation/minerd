@@ -1,15 +1,13 @@
 module go.sia.tech/minerd // v0.2.1
 
-go 1.23.2
-
-toolchain go1.24.2
+go 1.24.2
 
 require (
-	go.sia.tech/core v0.13.0
-	go.sia.tech/coreutils v0.15.0
+	go.sia.tech/core v0.13.1
+	go.sia.tech/coreutils v0.15.2
 	go.sia.tech/jape v0.14.0
-	go.sia.tech/walletd/v2 v2.8.0
-	go.sia.tech/web/walletd v0.29.2
+	go.sia.tech/walletd/v2 v2.9.0
+	go.sia.tech/web/walletd v0.29.3
 	go.uber.org/zap v1.27.0
 	golang.org/x/term v0.32.0
 	gopkg.in/yaml.v3 v3.0.1
