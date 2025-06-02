@@ -204,6 +204,7 @@ type MiningGetBlockTemplateRequest struct {
 // MiningGetBlockTemplateResponse is the response type for
 // /mining/getblocktemplate.
 type MiningGetBlockTemplateResponse struct {
+	Commitment        types.Hash256                       `json:"commitment"`
 	Transactions      []MiningGetBlockTemplateResponseTxn `json:"transactions"`
 	MinerPayout       []MiningGetBlockTemplateResponseTxn `json:"minerpayout"`
 	PreviousBlockHash string                              `json:"previousblockhash"`
