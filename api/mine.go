@@ -143,6 +143,10 @@ retry:
 		goto retry
 	}
 
+	if cs.Index.Height >= cs.Network.HardforkV2.RequireHeight {
+		txns = nil // ignore potential v1 transactions
+	}
+
 	b := types.Block{
 		ParentID:  cs.Index.ID,
 		Timestamp: types.CurrentTimestamp(),
@@ -150,15 +154,6 @@ retry:
 			Value:   cs.BlockReward(),
 			Address: addr,
 		}},
-	}
-
-	if cs.Index.Height >= cs.Network.HardforkV2.AllowHeight {
-		b.V2 = &types.V2BlockData{
-			Height: cs.Index.Height + 1,
-		}
-	}
-	if cs.Index.Height >= cs.Network.HardforkV2.RequireHeight {
-		txns = nil // ignore potential v1 transactions
 	}
 
 	var weight uint64
@@ -169,15 +164,23 @@ retry:
 		b.Transactions = append(b.Transactions, txn)
 		b.MinerPayouts[0].Value = b.MinerPayouts[0].Value.Add(txn.TotalFees())
 	}
-	for _, txn := range v2Txns {
-		if weight += cs.V2TransactionWeight(txn); weight > cs.MaxBlockWeight() {
-			break
+
+	if cs.Index.Height >= cs.Network.HardforkV2.AllowHeight {
+		b.V2 = &types.V2BlockData{
+			Height: cs.Index.Height + 1,
 		}
-		b.V2.Transactions = append(b.V2.Transactions, txn)
-		b.MinerPayouts[0].Value = b.MinerPayouts[0].Value.Add(txn.MinerFee)
+		for _, txn := range v2Txns {
+			if weight += cs.V2TransactionWeight(txn); weight > cs.MaxBlockWeight() {
+				break
+			}
+			b.V2.Transactions = append(b.V2.Transactions, txn)
+			b.MinerPayouts[0].Value = b.MinerPayouts[0].Value.Add(txn.MinerFee)
+		}
 	}
+
 	if b.V2 != nil {
 		b.V2.Commitment = cs.Commitment(addr, b.Transactions, b.V2Transactions())
 	}
+
 	return b, cs
 }
