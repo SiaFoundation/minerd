@@ -129,7 +129,6 @@ func (s *server) miningGetBlockTemplateHandler(jc jape.Context) {
 				}
 				s.cachedTemplate = &template
 			}
-
 			return *s.cachedTemplate, s.cachedTemplateInvalidated, nil
 		}()
 		if jc.Check("failed to get template", err) != nil {
@@ -142,11 +141,20 @@ func (s *server) miningGetBlockTemplateHandler(jc jape.Context) {
 			return
 		}
 
-		// otherwise, wait until the template is invalidated again
+		// otherwise, wait until the template is invalidated again or the
+		// template has reached its maximum age
+		var maxAgeChan <-chan time.Time
+		if s.cachedTemplateMaxAge > 0 {
+			blockMaxTime := time.Unix(int64(template.Timestamp), 0).Add(s.cachedTemplateMaxAge)
+			maxAgeChan = time.After(time.Until(blockMaxTime))
+		}
+
 		select {
 		case <-jc.Request.Context().Done():
 			return
 		case <-invalidateChan:
+			continue
+		case <-maxAgeChan:
 			continue
 		}
 	}
