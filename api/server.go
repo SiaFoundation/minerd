@@ -35,6 +35,14 @@ func WithBasicAuth(password string) ServerOption {
 	}
 }
 
+// WithMaxTemplateAge sets the maximum age of the cached block template before
+// it gets invalidated.
+func WithMaxTemplateAge(maxAge time.Duration) ServerOption {
+	return func(s *server) {
+		s.cachedTemplateMaxAge = maxAge
+	}
+}
+
 type (
 	// A ChainManager manages blockchain and txpool state.
 	ChainManager interface {
@@ -77,6 +85,7 @@ type server struct {
 
 	cachedTemplateMu          sync.Mutex
 	cachedTemplate            *MiningGetBlockTemplateResponse // cached template, set to 'nil' when invalidated
+	cachedTemplateMaxAge      time.Duration                   // maximum age of the cached template before it is invalidated
 	cachedTemplateInvalidated chan struct{}                   // closed when the cached template is invalidated
 	lastPoolInvalidate        time.Time                       // last time the template was invalidated due to a pool change
 
@@ -113,7 +122,7 @@ func (s *server) miningGetBlockTemplateHandler(jc jape.Context) {
 			defer s.cachedTemplateMu.Unlock()
 
 			// generate new template if required
-			if s.cachedTemplate == nil {
+			if s.shouldRegenerateTemplate() {
 				template, err := generateBlockTemplate(s.cm, s.payoutAddr)
 				if err != nil {
 					return MiningGetBlockTemplateResponse{}, nil, err
@@ -183,6 +192,20 @@ func (s *server) miningSubmitBlockTemplateHandler(jc jape.Context) {
 		}
 	}
 	jc.Encode(nil)
+}
+
+// shouldRegenerateTemplate checks if the cached block template should be
+// regenerated. This happens if no valid one exists or if it has reached its
+// maximum age and needs to be regenerated. Expects cachedTemplateMu to be
+// locked.
+func (s *server) shouldRegenerateTemplate() bool {
+	if s.cachedTemplate == nil {
+		return true // no template cached, needs to be generated
+	} else if s.cachedTemplateMaxAge == 0 {
+		return false // no max age set, template never expires
+	}
+	blockTime := time.Unix(int64(s.cachedTemplate.Timestamp), 0)
+	return time.Since(blockTime) >= s.cachedTemplateMaxAge
 }
 
 func newServer(cm ChainManager, s Syncer, payoutAddr types.Address, opts ...ServerOption) *server {

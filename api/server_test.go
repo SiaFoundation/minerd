@@ -26,3 +26,29 @@ func TestShouldPoolChangeInvalidateTemplate(t *testing.T) {
 		t.Fatal("expected shouldPoolChangeInvalidateTemplate to return true")
 	}
 }
+
+func TestShouldRegenerateTemplate(t *testing.T) {
+	// no max age set
+	srv := newServer(nil, nil, types.VoidAddress)
+	if !srv.shouldRegenerateTemplate() {
+		t.Fatal("expected shouldRegenerateTemplate to return true when no template cached")
+	}
+	srv.cachedTemplate = &MiningGetBlockTemplateResponse{Timestamp: int32(time.Now().Add(-time.Hour).Unix())}
+	if srv.shouldRegenerateTemplate() {
+		t.Fatal("expected shouldRegenerateTemplate to return false when template cached")
+	}
+
+	// with max age set
+	srv = newServer(nil, nil, types.VoidAddress, WithMaxTemplateAge(time.Hour))
+	if !srv.shouldRegenerateTemplate() {
+		t.Fatal("expected shouldRegenerateTemplate to return true when no template cached")
+	}
+	srv.cachedTemplate = &MiningGetBlockTemplateResponse{Timestamp: int32(time.Now().Add(-59 * time.Minute).Unix())}
+	if srv.shouldRegenerateTemplate() {
+		t.Fatal("expected shouldRegenerateTemplate to return false when template cached and within max age")
+	}
+	srv.cachedTemplate = &MiningGetBlockTemplateResponse{Timestamp: int32(time.Now().Add(-61 * time.Minute).Unix())}
+	if !srv.shouldRegenerateTemplate() {
+		t.Fatal("expected shouldRegenerateTemplate to return true when template cached and beyond max age")
+	}
+}

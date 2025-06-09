@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"syscall"
+	"time"
 
 	"go.sia.tech/core/types"
 	cwallet "go.sia.tech/coreutils/wallet"
@@ -58,7 +59,8 @@ Runs a CPU miner. Not intended for production use.
 )
 
 type Mining struct {
-	PayoutAddress string `yaml:"payoutAddress,omitempty"`
+	MaxTemplateAge time.Duration `yaml:"maxTemplateAge,omitempty"`
+	PayoutAddress  string        `yaml:"payoutAddress,omitempty"`
 }
 
 type Config struct {

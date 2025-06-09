@@ -288,12 +288,15 @@ func runNode(ctx context.Context, cfg Config, log *zap.Logger, enableDebug bool)
 		wAPI.WithPublicEndpoints(cfg.HTTP.PublicEndpoints),
 		wAPI.WithBasicAuth(cfg.HTTP.Password),
 	}
+	if enableDebug {
+		walletdAPIOpts = append(walletdAPIOpts, wAPI.WithDebug())
+	}
 	minerAPIOpts := []api.ServerOption{
 		api.WithLogger(log.Named("api")),
 		api.WithBasicAuth(cfg.HTTP.Password),
 	}
-	if enableDebug {
-		walletdAPIOpts = append(walletdAPIOpts, wAPI.WithDebug())
+	if cfg.Mining.MaxTemplateAge > 0 {
+		minerAPIOpts = append(minerAPIOpts, api.WithMaxTemplateAge(cfg.Mining.MaxTemplateAge))
 	}
 	walletdAPI := wAPI.NewServer(cm, s, wm, walletdAPIOpts...)
 	minerAPI := api.NewServer(cm, s, payoutAddr, minerAPIOpts...)
