@@ -104,7 +104,8 @@ var cfg = Config{
 		},
 	},
 	Mining: Mining{
-		PayoutAddress: os.Getenv(payoutAddrEnvVar),
+		MaxTemplateAge: 0,
+		PayoutAddress:  os.Getenv(payoutAddrEnvVar),
 	},
 }
 
@@ -219,6 +220,7 @@ func main() {
 	rootCmd.IntVar(&cfg.Index.BatchSize, "index.batch", cfg.Index.BatchSize, "max number of blocks to index at a time. Increasing this will increase scan speed, but also increase memory and cpu usage.")
 
 	rootCmd.StringVar(&cfg.Mining.PayoutAddress, "mining.payoutAddress", cfg.Mining.PayoutAddress, "payout address to include within block templates")
+	rootCmd.DurationVar(&cfg.Mining.MaxTemplateAge, "mining.maxTemplateAge", cfg.Mining.MaxTemplateAge, "max age of a template before it gets invalidated. By default there is no max age")
 
 	rootCmd.TextVar(&cfg.Log.Level, "log.level", cfg.Log.Level, "log level (debug, info, warn, error)")
 	rootCmd.BoolVar(&cfg.Log.File.Enabled, "log.file.enabled", cfg.Log.File.Enabled, "enable file logging")
