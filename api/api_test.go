@@ -19,7 +19,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-func startMinerServer(tb testing.TB, cn *testutil.ConsensusNode, log *zap.Logger) *api.Client {
+func startMinerServer(tb testing.TB, cn *testutil.ConsensusNode, log *zap.Logger, opts ...api.ServerOption) *api.Client {
 	tb.Helper()
 
 	l, err := net.Listen("tcp", ":0")
@@ -38,7 +38,8 @@ func startMinerServer(tb testing.TB, cn *testutil.ConsensusNode, log *zap.Logger
 	uc := types.StandardUnlockConditions(addrKey.PublicKey())
 	payoutAddr := uc.UnlockHash()
 
-	minerAPI := api.NewServer(cn.Chain, cn.Syncer, payoutAddr, api.WithLogger(log))
+	opts = append(opts, api.WithLogger(log))
+	minerAPI := api.NewServer(cn.Chain, cn.Syncer, payoutAddr, opts...)
 	wAPI := walletdAPI.NewServer(cn.Chain, cn.Syncer, wm)
 	server := &http.Server{
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -317,4 +318,31 @@ func TestMineGetBlockTemplateLongpolling(t *testing.T) {
 	// mine a block to unblock API
 	cn.MineBlocks(t, types.VoidAddress, 1)
 	<-done
+}
+
+func TestMineGetBlockTemplateMaxAge(t *testing.T) {
+	log := zaptest.NewLogger(t)
+
+	t.Helper()
+
+	network, genesisBlock := testutil.V1Network()
+	cn := testutil.NewConsensusNode(t, network, genesisBlock, log)
+	c := startMinerServer(t, cn, log, api.WithMaxTemplateAge(time.Second))
+
+	// get block template
+	resp, err := c.MiningGetBlockTemplate(context.Background(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// get block template again with same id, this should not return immediately
+	// and also not block for much more than 1s
+	start := time.Now()
+	_, err = c.MiningGetBlockTemplate(context.Background(), resp.LongPollID)
+	if err != nil {
+		t.Error(err)
+	}
+	if time.Since(start) < 500*time.Millisecond || time.Since(start) > 2*time.Second {
+		t.Fatalf("expected MiningGetBlockTemplate to return after ~1s, got %v", time.Since(start))
+	}
 }
