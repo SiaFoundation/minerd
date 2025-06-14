@@ -1,3 +1,9 @@
+## 0.2.6 (2025-06-14)
+
+### Fixes
+
+- Update core to v0.13.2 and coreutils to v0.16.1
+
 ## 0.2.5 (2025-06-10)
 
 ### Features
