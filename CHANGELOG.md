@@ -1,3 +1,9 @@
+## 0.2.8 (2025-06-16)
+
+### Fixes
+
+- Update `go.sia.tech/web/walletd` dependency from 0.29.3 to 0.30.0
+
 ## 0.2.7 (2025-06-16)
 
 ### Features
