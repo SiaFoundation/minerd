@@ -216,6 +216,41 @@ func (s *server) shouldRegenerateTemplate() bool {
 	return time.Since(blockTime) >= s.cachedTemplateMaxAge
 }
 
+func (s *server) syncerPeersHandler(jc jape.Context) {
+	// get peers
+	peers := s.s.Peers()
+	if len(peers) == 0 {
+		jc.Encode([]syncer.PeerInfo{})
+		return
+	}
+
+	// get peer info for each peer
+	var peerInfos []syncer.PeerInfo
+	for _, p := range peers {
+		info, err := s.s.PeerInfo(p.Addr())
+		if jc.Check("failed to get peer info", err) != nil {
+			return
+		}
+		peerInfos = append(peerInfos, info)
+	}
+
+	jc.Encode(peerInfos)
+}
+
+func (s *server) syncerPeersConnectHandler(jc jape.Context) {
+	var addr string
+	if jc.Decode(&addr) != nil {
+		return
+	}
+
+	_, err := s.s.Connect(jc.Request.Context(), addr)
+	if jc.Check("failed to connect to peer", err) != nil {
+		return
+	}
+
+	jc.Encode(nil)
+}
+
 func newServer(cm ChainManager, s Syncer, payoutAddr types.Address, opts ...ServerOption) *server {
 	srv := &server{
 		log:                     zap.NewNop(),
@@ -280,6 +315,8 @@ func NewServer(cm ChainManager, s Syncer, payoutAddr types.Address, opts ...Serv
 	})
 
 	handlers := map[string]jape.Handler{
+		"POST /syncer/connect":   wrapAuthHandler(srv.syncerPeersConnectHandler),
+		"GET /syncer/peers":      wrapAuthHandler(srv.syncerPeersHandler),
 		"POST /getblocktemplate": wrapAuthHandler(srv.miningGetBlockTemplateHandler),
 		"POST /submitblock":      wrapAuthHandler(srv.miningSubmitBlockTemplateHandler),
 	}
