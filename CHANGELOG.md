@@ -1,3 +1,9 @@
+## 0.2.7 (2025-06-16)
+
+### Features
+
+- Added [GET] /syncer/peers and [POST] /syncer/connect
+
 ## 0.2.6 (2025-06-14)
 
 ### Fixes
