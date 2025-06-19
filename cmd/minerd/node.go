@@ -273,7 +273,10 @@ func runNode(ctx context.Context, cfg Config, log *zap.Logger, enableDebug bool)
 		NetAddress: syncerAddr,
 	}
 
-	s := syncer.New(syncerListener, cm, ps, header, syncer.WithLogger(log.Named("syncer")))
+	s := syncer.New(syncerListener, cm, ps, header,
+		syncer.WithLogger(log.Named("syncer")),
+		syncer.WithMaxInboundPeers(1024),
+		syncer.WithMaxInflightRPCs(1024))
 	defer s.Close()
 	go s.Run()
 
