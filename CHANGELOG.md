@@ -1,3 +1,9 @@
+## 0.2.11 (2025-06-25)
+
+### Fixes
+
+- Update walletd dependency from 2.10.2 to 2.10.3
+
 ## 0.2.10 (2025-06-19)
 
 ### Fixes
