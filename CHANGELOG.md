@@ -1,3 +1,10 @@
+## 0.2.12 (2025-07-01)
+
+### Fixes
+
+- Update coreutils from 0.16.3 to 0.16.4
+- Update walletd from 2.10.3 to 2.10.4
+
 ## 0.2.11 (2025-06-25)
 
 ### Fixes
