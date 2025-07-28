@@ -5,18 +5,8 @@ on:
     branches:
       - master
 
-env:
-  CGO_ENABLED: 1
-
 jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          args: --timeout=30m
   test:
     uses: SiaFoundation/workflows/.github/workflows/go-test.yml@master
+    with:
+      try-build: false
