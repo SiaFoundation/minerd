@@ -109,7 +109,6 @@ func (s *MockSyncer) Addr() string {
 	return ""
 }
 
-func (s *MockSyncer) BroadcastHeader(h types.BlockHeader) error               { return nil }
 func (s *MockSyncer) BroadcastV2BlockOutline(bo gateway.V2BlockOutline) error { return nil }
 func (s *MockSyncer) BroadcastTransactionSet([]types.Transaction) error       { return nil }
 func (s *MockSyncer) BroadcastV2TransactionSet(index types.ChainIndex, txns []types.V2Transaction) error {

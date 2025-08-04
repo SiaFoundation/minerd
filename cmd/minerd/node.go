@@ -173,9 +173,6 @@ func runNode(ctx context.Context, cfg Config, log *zap.Logger, enableDebug bool)
 	case "zen":
 		network, genesisBlock = chain.TestnetZen()
 		bootstrapPeers = syncer.ZenBootstrapPeers
-	case "anagami":
-		network, genesisBlock = chain.TestnetAnagami()
-		bootstrapPeers = syncer.AnagamiBootstrapPeers
 	default:
 		var err error
 		network, genesisBlock, err = loadCustomNetwork(cfg.Consensus.Network)
