@@ -11,6 +11,7 @@ import (
 
 	"go.sia.tech/core/consensus"
 	"go.sia.tech/core/types"
+	"go.sia.tech/coreutils"
 	"go.sia.tech/minerd/api"
 	"go.sia.tech/minerd/internal/testutil"
 	walletdAPI "go.sia.tech/walletd/v2/api"
@@ -244,16 +245,11 @@ func TestMineGetBlockTemplate(t *testing.T) {
 
 		// mine block
 		mineBlock := func(b *types.Block, target types.BlockID) {
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			factor := 1009
-			for b.ID().CmpWork(target) < 0 {
-				select {
-				case <-ctx.Done():
-					t.Fatal(ctx.Err())
-				default:
-				}
-				b.Nonce += uint64(factor)
+			cs, err := c.ConsensusTipState()
+			if err != nil {
+				t.Fatal(err)
+			} else if !coreutils.FindBlockNonce(cs, b, 10*time.Second) {
+				t.Fatal("failed to find nonce")
 			}
 		}
 		mineBlock(&b, target)

@@ -70,7 +70,6 @@ type (
 		Peers() []*syncer.Peer
 		PeerInfo(addr string) (syncer.PeerInfo, error)
 		Connect(ctx context.Context, addr string) (*syncer.Peer, error)
-		BroadcastHeader(types.BlockHeader) error
 		BroadcastV2BlockOutline(bo gateway.V2BlockOutline) error
 	}
 )
@@ -190,11 +189,7 @@ func (s *server) miningSubmitBlockTemplateHandler(jc jape.Context) {
 	if jc.Check("failed to add block to chain manager", s.cm.AddBlocks([]types.Block{block})) != nil {
 		return
 	}
-	if !isV2 {
-		if jc.Check("failed to broadcast header", s.s.BroadcastHeader(block.Header())) != nil {
-			return
-		}
-	} else {
+	if isV2 {
 		if jc.Check("failed to broadcast block outline", s.s.BroadcastV2BlockOutline(gateway.OutlineBlock(block, s.cm.PoolTransactions(), s.cm.V2PoolTransactions()))) != nil {
 			return
 		}
