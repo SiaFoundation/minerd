@@ -1,4 +1,4 @@
-module go.sia.tech/minerd // v0.2.12
+module go.sia.tech/minerd // v0.2.13
 
 go 1.24.3
 
