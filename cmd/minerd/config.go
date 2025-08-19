@@ -206,7 +206,7 @@ func setAdvancedConfig() {
 	fmt.Println("Zen is a production-like testnet.")
 	fmt.Println("This cannot be changed later without resetting minerd.")
 	fmt.Printf("Currently %q\n", cfg.Consensus.Network)
-	cfg.Consensus.Network = readInput(`Enter network ("mainnet" or "zen")`)
+	cfg.Consensus.Network = readInput(`Enter network ("mainnet")`)
 }
 
 func configPath() string {

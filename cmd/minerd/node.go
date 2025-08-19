@@ -170,9 +170,6 @@ func runNode(ctx context.Context, cfg Config, log *zap.Logger, enableDebug bool)
 	case "mainnet":
 		network, genesisBlock = chain.Mainnet()
 		bootstrapPeers = syncer.MainnetBootstrapPeers
-	case "zen":
-		network, genesisBlock = chain.TestnetZen()
-		bootstrapPeers = syncer.ZenBootstrapPeers
 	default:
 		var err error
 		network, genesisBlock, err = loadCustomNetwork(cfg.Consensus.Network)
