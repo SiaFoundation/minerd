@@ -1,3 +1,10 @@
+## 0.3.0 (2025-08-26)
+
+### Breaking Changes
+
+- Remove support for Zen testnet.
+- Update core and coreutils dependencies to support difficulty adjustment - hardfork.
+
 ## 0.2.13 (2025-08-11)
 
 ### Fixes
