@@ -3,8 +3,8 @@ module go.sia.tech/minerd // v0.3.0
 go 1.24.3
 
 require (
-	go.sia.tech/core v0.17.1
-	go.sia.tech/coreutils v0.18.0
+	go.sia.tech/core v0.17.4
+	go.sia.tech/coreutils v0.18.2
 	go.sia.tech/jape v0.14.0
 	go.sia.tech/walletd/v2 v2.10.5-0.20250730100545-c9da2f76f5d0
 	go.sia.tech/web/walletd v0.34.3
@@ -22,7 +22,7 @@ require (
 	github.com/quic-go/qpack v0.5.1 // indirect
 	github.com/quic-go/quic-go v0.54.0 // indirect
 	github.com/quic-go/webtransport-go v0.9.0 // indirect
-	go.etcd.io/bbolt v1.4.2 // indirect
+	go.etcd.io/bbolt v1.4.3 // indirect
 	go.sia.tech/mux v1.4.0 // indirect
 	go.sia.tech/web v0.0.0-20240610131903-5611d44a533e // indirect
 	go.uber.org/mock v0.5.2 // indirect
