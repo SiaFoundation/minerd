@@ -1,3 +1,9 @@
+## 0.3.1 (2025-09-18)
+
+### Features
+
+- Update core to v0.17.5 and coreutils to v0.18.4
+
 ## 0.3.0 (2025-08-26)
 
 ### Breaking Changes
