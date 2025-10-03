@@ -75,7 +75,7 @@ func generateBlockTemplate(cm ChainManager, addr types.Address) (MiningGetBlockT
 		MinerPayout:       []MiningGetBlockTemplateResponseTxn{minerPayout},
 		PreviousBlockHash: block.ParentID.String(),
 		LongPollID:        hex.EncodeToString(frand.Bytes(16)),
-		Target:            cs.ChildTarget.String(),
+		Target:            cs.PoWTarget().String(),
 		Height:            uint32(cs.Index.Height) + 1,
 		Timestamp:         int32(block.Timestamp.Unix()),
 		Version:           version,

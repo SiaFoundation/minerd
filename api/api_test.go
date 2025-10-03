@@ -81,7 +81,7 @@ func startMinerServer(tb testing.TB, cn *testutil.ConsensusNode, log *zap.Logger
 func TestMineGetBlockTemplate(t *testing.T) {
 	log := zaptest.NewLogger(t)
 
-	test := func(n *consensus.Network, genesisBlock types.Block) {
+	test := func(t *testing.T, n *consensus.Network, genesisBlock types.Block) {
 		t.Helper()
 
 		cn := testutil.NewConsensusNode(t, n, genesisBlock, log)
@@ -243,6 +243,14 @@ func TestMineGetBlockTemplate(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		// make sure the target is correct
+		cs, err := c.ConsensusTipState()
+		if err != nil {
+			t.Fatal(err)
+		} else if target != cs.PoWTarget() {
+			t.Fatalf("expected target %v, got %v", cs.PoWTarget(), target)
+		}
+
 		// mine block
 		mineBlock := func(b *types.Block, target types.BlockID) {
 			cs, err := c.ConsensusTipState()
@@ -270,12 +278,18 @@ func TestMineGetBlockTemplate(t *testing.T) {
 
 	t.Run("v1", func(t *testing.T) {
 		network, genesisBlock := testutil.V1Network()
-		test(network, genesisBlock)
+		test(t, network, genesisBlock)
 	})
 
 	t.Run("v2", func(t *testing.T) {
 		network, genesisBlock := testutil.V2Network()
-		test(network, genesisBlock)
+		network.HardforkV2.FinalCutHeight = network.HardforkV2.RequireHeight + 1000
+		test(t, network, genesisBlock)
+	})
+
+	t.Run("v2-final-cut", func(t *testing.T) {
+		network, genesisBlock := testutil.V2Network()
+		test(t, network, genesisBlock)
 	})
 }
 
