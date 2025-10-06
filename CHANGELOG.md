@@ -1,3 +1,17 @@
+## 0.3.2 (2025-10-06)
+
+### Features
+
+- Update walletd dependency from v2.10.5 to v2.11.0.
+
+#### Add support for V2 Final Cut Hardfork
+
+Includes minor improvements to the consensus state and accumulator in preparation for instant syncing and light node support.
+
+### Fixes
+
+- Fix empty target being returned after final cut activation.
+
 ## 0.3.1 (2025-09-18)
 
 ### Features
