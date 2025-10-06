@@ -24,7 +24,7 @@ func runCPUMiner(c *api.Client, minerAddr types.Address, n int) {
 		elapsed := time.Since(start)
 		cs, err := c.ConsensusTipState()
 		checkFatalError("failed to get consensus tip state:", err)
-		d, _ := new(big.Int).SetString(cs.Difficulty.String(), 10)
+		d, _ := new(big.Int).SetString(cs.PoWTarget().String(), 10)
 		d.Mul(d, big.NewInt(int64(1+elapsed)))
 		fmt.Printf("\rMining block %4v...(%.2f blocks/day), difficulty %v)", cs.Index.Height+1, float64(blocksFound)*float64(24*time.Hour)/float64(elapsed), cs.Difficulty)
 
