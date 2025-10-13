@@ -3,13 +3,13 @@ module go.sia.tech/minerd // v0.3.2
 go 1.24.3
 
 require (
-	go.sia.tech/core v0.17.5
+	go.sia.tech/core v0.18.0
 	go.sia.tech/coreutils v0.18.5
 	go.sia.tech/jape v0.14.1
 	go.sia.tech/walletd/v2 v2.11.0
 	go.sia.tech/web/walletd v0.34.5
 	go.uber.org/zap v1.27.0
-	golang.org/x/term v0.35.0
+	golang.org/x/term v0.36.0
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/flagg v1.1.1
 	lukechampine.com/frand v1.5.1
@@ -32,7 +32,7 @@ require (
 	golang.org/x/mod v0.28.0 // indirect
 	golang.org/x/net v0.44.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
 	golang.org/x/tools v0.37.0 // indirect
 )
