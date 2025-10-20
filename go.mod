@@ -4,7 +4,7 @@ go 1.24.3
 
 require (
 	go.sia.tech/core v0.18.0
-	go.sia.tech/coreutils v0.18.5
+	go.sia.tech/coreutils v0.18.6
 	go.sia.tech/jape v0.14.1
 	go.sia.tech/walletd/v2 v2.11.0
 	go.sia.tech/web/walletd v0.34.5
