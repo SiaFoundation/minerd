@@ -1,3 +1,10 @@
+## 0.3.3 (2025-11-19)
+
+### Fixes
+
+- Fixed missing build info.
+- Update core dependency from 0.17.5 to 0.18.0.
+
 ## 0.3.2 (2025-10-06)
 
 ### Features
