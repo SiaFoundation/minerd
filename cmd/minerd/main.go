@@ -13,8 +13,8 @@ import (
 
 	"go.sia.tech/core/types"
 	cwallet "go.sia.tech/coreutils/wallet"
+	"go.sia.tech/minerd/internal/build"
 	"go.sia.tech/walletd/v2/api"
-	"go.sia.tech/walletd/v2/build"
 	"go.sia.tech/walletd/v2/config"
 	"go.sia.tech/walletd/v2/wallet"
 	"go.uber.org/zap"
