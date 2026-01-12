@@ -1,3 +1,10 @@
+## 0.3.4 (2026-01-12)
+
+### Fixes
+
+- Update coreutils dependency from 0.19.0 to 0.20.0.
+- Update walletd UI dependency from 0.34.5 to 0.35.0.
+
 ## 0.3.3 (2025-11-19)
 
 ### Fixes
