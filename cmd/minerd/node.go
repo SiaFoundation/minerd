@@ -295,7 +295,7 @@ func runNode(ctx context.Context, cfg Config, log *zap.Logger, enableDebug bool)
 	if cfg.Mining.MaxTemplateAge > 0 {
 		minerAPIOpts = append(minerAPIOpts, api.WithMaxTemplateAge(cfg.Mining.MaxTemplateAge))
 	}
-	walletdAPI := wAPI.NewServer(cm, s, wm, walletdAPIOpts...)
+	walletdAPI := wAPI.NewServer(store, cm, s, wm, walletdAPIOpts...)
 	minerAPI := api.NewServer(cm, s, payoutAddr, minerAPIOpts...)
 	web := walletd.Handler()
 	server := &http.Server{

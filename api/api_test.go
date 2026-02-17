@@ -41,7 +41,7 @@ func startMinerServer(tb testing.TB, cn *testutil.ConsensusNode, log *zap.Logger
 
 	opts = append(opts, api.WithLogger(log))
 	minerAPI := api.NewServer(cn.Chain, cn.Syncer, payoutAddr, opts...)
-	wAPI := walletdAPI.NewServer(cn.Chain, cn.Syncer, wm)
+	wAPI := walletdAPI.NewServer(cn.Store, cn.Chain, cn.Syncer, wm)
 	server := &http.Server{
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// serve mining API
