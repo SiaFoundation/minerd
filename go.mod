@@ -1,6 +1,6 @@
 module go.sia.tech/minerd // v0.3.3
 
-go 1.24.3
+go 1.26.0
 
 require (
 	go.sia.tech/core v0.19.0
