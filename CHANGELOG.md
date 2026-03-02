@@ -1,3 +1,16 @@
+## 0.3.4 (2026-03-02)
+
+### Features
+
+- Update Go to 1.26.0.
+- Update walletd dependency from 2.11.0 to 2.12.0.
+
+### Fixes
+
+- Update coreutils dependency from 0.19.0 to 0.20.0.
+- Update coreutils dependency from 0.21.0 to 0.21.1.
+- Update walletd UI dependency from 0.34.5 to 0.35.0.
+
 ## 0.3.3 (2025-11-19)
 
 ### Fixes
