@@ -8,7 +8,7 @@ require (
 	go.sia.tech/jape v0.14.1
 	go.sia.tech/walletd/v2 v2.12.0
 	go.sia.tech/web/walletd v0.36.2
-	go.uber.org/zap v1.27.1
+	go.uber.org/zap v1.28.0
 	golang.org/x/term v0.42.0
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/flagg v1.1.1
