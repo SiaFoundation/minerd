@@ -1,3 +1,9 @@
+## 0.4.0 (2026-07-03)
+
+### Breaking Changes
+
+- Update core to v0.21.2 and coreutils to v0.23.0
+
 ## 0.3.4 (2026-04-27)
 
 ### Features
