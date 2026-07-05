@@ -1,10 +1,10 @@
-module go.sia.tech/minerd // v0.4.0
+module go.sia.tech/minerd // v0.5.1
 
 go 1.26.0
 
 require (
-	go.sia.tech/core v0.21.3-0.20260703153603-327be4a8d318
-	go.sia.tech/coreutils v0.22.2-0.20260703161806-1cbfb0499be6
+	go.sia.tech/core v0.21.4
+	go.sia.tech/coreutils v0.23.2
 	go.sia.tech/jape v0.14.1
 	go.sia.tech/walletd/v2 v2.12.0
 	go.sia.tech/web/walletd v0.36.2
