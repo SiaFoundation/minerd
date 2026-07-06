@@ -6,7 +6,7 @@ require (
 	go.sia.tech/core v0.21.4
 	go.sia.tech/coreutils v0.23.2
 	go.sia.tech/jape v0.14.1
-	go.sia.tech/walletd/v2 v2.12.0
+	go.sia.tech/walletd/v2 v2.15.0
 	go.sia.tech/web/walletd v0.36.2
 	go.uber.org/zap v1.28.0
 	golang.org/x/term v0.44.0
@@ -19,7 +19,7 @@ require (
 require (
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/julienschmidt/httprouter v1.3.0 // indirect
-	github.com/mattn/go-sqlite3 v1.14.33 // indirect
+	github.com/mattn/go-sqlite3 v1.14.47 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.60.0 // indirect
 	github.com/quic-go/webtransport-go v0.11.0 // indirect
