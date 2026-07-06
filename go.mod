@@ -1,12 +1,12 @@
-module go.sia.tech/minerd // v0.5.3
+module go.sia.tech/minerd // v0.5.4
 
 go 1.26.0
 
 require (
-	go.sia.tech/core v0.21.4
-	go.sia.tech/coreutils v0.23.3
+	go.sia.tech/core v0.21.5
+	go.sia.tech/coreutils v0.23.4
 	go.sia.tech/jape v0.14.1
-	go.sia.tech/walletd/v2 v2.15.1
+	go.sia.tech/walletd/v2 v2.15.2-0.20260706203000-ca5c2406d032
 	go.sia.tech/web/walletd v0.36.2
 	go.uber.org/zap v1.28.0
 	golang.org/x/term v0.44.0
@@ -22,7 +22,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.47 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.60.0 // indirect
-	github.com/quic-go/webtransport-go v0.11.0 // indirect
+	github.com/quic-go/webtransport-go v0.11.1 // indirect
 	go.etcd.io/bbolt v1.5.0 // indirect
 	go.sia.tech/mux v1.5.2 // indirect
 	go.sia.tech/web v0.0.0-20240610131903-5611d44a533e // indirect
