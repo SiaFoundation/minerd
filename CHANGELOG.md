@@ -1,3 +1,11 @@
+## 0.5.5 (2026-07-13)
+
+### Fixes
+
+- Update go.sia.tech/core to v0.21.6.
+- Update go.sia.tech/coreutils to v0.23.5.
+- Update go.sia.tech/walletd/v2 to v2.15.2.
+
 ## 0.5.3 (2026-07-06)
 
 ### Fixes
