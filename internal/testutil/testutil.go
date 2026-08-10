@@ -60,11 +60,11 @@ func NewConsensusNode(tb testing.TB, n *consensus.Network, genesis types.Block, 
 	}
 	tb.Cleanup(func() { l.Close() })
 
-	dbstore, tipState, err := chain.NewDBStore(chain.NewMemDB(), n, genesis, chain.NewZapMigrationLogger(log.Named("chaindb")))
+	dbstore, err := chain.NewDBStore(chain.NewMemDB(), n, genesis, chain.NewZapMigrationLogger(log.Named("chaindb")))
 	if err != nil {
 		tb.Fatal(err)
 	}
-	cm := chain.NewManager(dbstore, tipState)
+	cm := chain.NewManager(dbstore)
 
 	store, err := sqlite.OpenDatabase(filepath.Join(tb.TempDir(), "minerd.sqlite"), sqlite.WithLog(log.Named("sqlite3")))
 	if err != nil {

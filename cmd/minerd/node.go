@@ -125,10 +125,13 @@ func migrateConsensusDB(fp string, n *consensus.Network, genesis types.Block, lo
 	}
 	defer bdb.Close()
 
-	dbstore, tipState, err := chain.NewDBStore(bdb, n, genesis, chain.NewZapMigrationLogger(log.Named("chaindb")))
+	store, err := chain.NewDBStore(bdb, n, genesis, chain.NewZapMigrationLogger(log.Named("chaindb")))
 	if err != nil {
 		return fmt.Errorf("failed to create chain store: %w", err)
-	} else if tipState.Index.Height < n.HardforkV2.AllowHeight {
+	}
+	dbstore := store.Scratchpad()
+	tipState := dbstore.TipState()
+	if tipState.Index.Height < n.HardforkV2.AllowHeight {
 		return nil // no migration needed, the chain is still on v1
 	}
 
@@ -197,11 +200,11 @@ func runNode(ctx context.Context, cfg Config, log *zap.Logger, enableDebug bool)
 	}
 	defer bdb.Close()
 
-	dbstore, tipState, err := chain.NewDBStore(bdb, network, genesisBlock, chain.NewZapMigrationLogger(log.Named("chaindb")))
+	dbstore, err := chain.NewDBStore(bdb, network, genesisBlock, chain.NewZapMigrationLogger(log.Named("chaindb")))
 	if err != nil {
 		return fmt.Errorf("failed to create chain store: %w", err)
 	}
-	cm := chain.NewManager(dbstore, tipState)
+	cm := chain.NewManager(dbstore)
 
 	syncerListener, err := net.Listen("tcp", cfg.Syncer.Address)
 	if err != nil {
