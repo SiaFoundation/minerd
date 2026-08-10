@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	go.sia.tech/core v0.21.7
-	go.sia.tech/coreutils v0.23.5
+	go.sia.tech/coreutils v0.24.0
 	go.sia.tech/jape v0.14.1
 	go.sia.tech/walletd/v2 v2.15.2
 	go.sia.tech/web/walletd v0.36.2
@@ -21,8 +21,8 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.47 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
-	github.com/quic-go/quic-go v0.60.0 // indirect
-	github.com/quic-go/webtransport-go v0.11.1 // indirect
+	github.com/quic-go/quic-go v0.61.0 // indirect
+	github.com/quic-go/webtransport-go v0.12.0 // indirect
 	go.etcd.io/bbolt v1.5.0 // indirect
 	go.sia.tech/mux v1.5.3 // indirect
 	go.sia.tech/web v0.0.0-20240610131903-5611d44a533e // indirect
