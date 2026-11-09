@@ -1,3 +1,13 @@
+## 0.5.6 (2026-11-09)
+
+### Features
+
+- Update walletd dependency to v2.16.0.
+
+### Fixes
+
+- Update coreutils to v0.25.2
+
 ## 0.5.5 (2026-07-13)
 
 ### Fixes
