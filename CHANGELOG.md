@@ -1,3 +1,9 @@
+## 0.5.7 (2026-11-16)
+
+### Fixes
+
+- Update go.sia.tech/walletd/v2 from v2.16.0 to v2.16.1.
+
 ## 0.5.6 (2026-11-09)
 
 ### Features
